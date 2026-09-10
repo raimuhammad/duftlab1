@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DUFTLAB</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper: #F6F3EC;
+    --paper-dim: #EDE8DC;
+    --ink: #1C1B18;
+    --line: #D8D2C4;
+    --muted: #8C8573;
+    --oxide: #7A2E2E;
+    --serif: 'Fraunces', serif;
+    --sans: 'Inter', sans-serif;
+    --ease: cubic-bezier(.16,1,.3,1);
+    --ease-soft: cubic-bezier(.22,.61,.36,1);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+    cursor:none;
+  }
+  a{color:inherit;}
+
+  /* ---------- CUSTOM CURSOR ---------- */
+  .cursor-dot, .cursor-ring{
+    position:fixed; top:0; left:0; z-index:200;
+    pointer-events:none;
+    border-radius:50%;
+    transform:translate(-50%,-50%);
+  }
+  .cursor-dot{
+    width:5px; height:5px; background:var(--oxide);
+    transition:opacity .2s ease;
+  }
+  .cursor-ring{
+    width:34px; height:34px; border:1px solid rgba(28,27,24,.5);
+    transition:width .28s var(--ease), height .28s var(--ease), border-color .28s ease, background .28s ease;
+  }
+  .cursor-ring.hover{
+    width:64px; height:64px; background:rgba(122,46,46,.06); border-color:var(--oxide);
+  }
+  @media (hover:none), (pointer:coarse){
+    .cursor-dot, .cursor-ring{display:none;}
+    body{cursor:auto;}
+  }
+
+  /* ---------- GRAIN OVERLAY ---------- */
+  .grain{
+    position:fixed; inset:0; z-index:150; pointer-events:none;
+    opacity:.035; mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* ---------- SCROLL REVEAL ---------- */
+  [data-reveal]{
+    opacity:0; transform:translateY(28px);
+    transition:opacity .9s var(--ease), transform .9s var(--ease);
+  }
+  [data-reveal].in-view{opacity:1; transform:translateY(0);}
+
+  /* ---------- HERO (A24-style: full-bleed photo + title list) ---------- */
+  @keyframes riseIn{ to{opacity:1; transform:translateY(0);} }
+
+  .hero{
+    position:relative;
+    height:100vh; min-height:640px;
+    overflow:hidden;
+    color:var(--ink);
+    background:var(--paper);
+  }
+  .hero-bg{position:absolute; inset:-3%;}
+  .hero-bg .layer{
+    position:absolute; inset:0;
+    opacity:0;
+    background-color:var(--layer-color, var(--paper-dim));
+    background-image:var(--layer-image, none);
+    background-size:cover;
+    background-position:center;
+    transform:scale(1.04);
+    transition:opacity 1.3s var(--ease), transform 7s linear;
+  }
+  .hero-bg .layer.active{opacity:1; transform:scale(1.1);}
+  .hero-scrim{
+    position:absolute; inset:0;
+    background:
+      linear-gradient(90deg, rgba(246,243,236,.82) 0%, rgba(246,243,236,.38) 40%, rgba(246,243,236,.05) 66%),
+      linear-gradient(0deg, rgba(246,243,236,.4), transparent 30%);
+    pointer-events:none;
+  }
+
+  .hero-nav{
+    position:absolute; top:0; left:0; right:0; z-index:6;
+    display:flex; justify-content:space-between; align-items:center;
+    padding:28px 5vw;
+    font-size:13px;
+  }
+  .hero-nav .word img{height:20px; display:block;}
+  .hero-nav .links{display:flex; align-items:center; gap:24px; color:var(--ink);}
+  .hero-nav .links-item{display:flex; align-items:center; gap:8px; cursor:pointer;}
+  .hero-nav .links .rec{
+    width:6px; height:6px; border-radius:50%; background:var(--oxide);
+    animation:pulse 2.2s ease-in-out infinite;
+  }
+  @keyframes pulse{ 0%,100%{opacity:.35;} 50%{opacity:1;} }
+
+  .hero-stack{
+    position:absolute; left:5vw; top:50%; transform:translateY(-50%);
+    z-index:5;
+    display:flex; flex-direction:column; gap:34px;
+    max-width:90vw;
+  }
+  .hero-list{
+    display:flex; flex-direction:column; gap:2px;
+  }
+  .hero-list .item{
+    display:flex; align-items:baseline; gap:16px;
+    cursor:pointer;
+  }
+  .hero-list .item .t{
+    font-family:var(--serif); font-weight:700;
+    font-size:clamp(26px, 4.6vw, 56px);
+    line-height:1.08;
+    letter-spacing:-0.01em;
+    color:var(--ink);
+    transition:opacity .5s var(--ease), font-weight .5s var(--ease), letter-spacing .5s var(--ease), color .5s var(--ease);
+    opacity:0; animation:riseIn .7s var(--ease) forwards;
+  }
+  .hero-list .item.active .t{opacity:.3; font-weight:300;}
+  .hero-list .item:not(.active):hover .t{letter-spacing:0.006em; color:var(--oxide);}
+  .hero-list .item .tag{
+    font-size:12px; color:var(--muted);
+    font-variant-numeric:tabular-nums;
+    opacity:0; animation:riseIn .7s ease forwards;
+  }
+
+  .hero-info{max-width:420px;}
+  .hero-info .line{
+    font-family:var(--serif); font-style:italic; font-size:17px;
+    color:var(--oxide);
+    opacity:0; transform:translateY(6px);
+    transition:opacity .4s var(--ease), transform .4s var(--ease);
+  }
+  .hero-info .line.show{opacity:1; transform:translateY(0);}
+  .hero-info button{
+    position:relative;
+    margin-top:14px; font-size:12px; color:var(--ink); background:none; border:none;
+    border-bottom:1px solid rgba(28,27,24,.5); padding-bottom:2px; cursor:pointer;
+    font-family:var(--sans);
+    opacity:0; transform:translateY(6px);
+    transition:opacity .4s ease .05s, transform .12s var(--ease);
+  }
+  .hero-info button.show{opacity:1; transform:translateY(0);}
+
+  .scroll-cue{
+    position:absolute; bottom:40px; right:5vw; z-index:5;
+    font-size:12px; color:var(--muted);
+    display:flex; align-items:center; gap:10px;
+    opacity:0; animation:riseIn .8s ease forwards 1.6s;
+  }
+  .scroll-cue .arrow{
+    display:inline-block;
+    animation:bob 2s ease-in-out infinite;
+  }
+  @keyframes bob{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(5px);} }
+
+  /* ---------- AMBIENT PLACEHOLDER (no photo yet) ---------- */
+  .ambient{
+    position:absolute; inset:0;
+  }
+  .ambient::before{
+    content:'';
+    position:absolute; top:0; left:0; right:0; height:3px;
+    background:var(--amb-accent);
+  }
+
+  /* ---------- SHOP / CATALOG ---------- */
+  .shop{padding:120px 0;}
+  .shop-grid{
+    display:grid; grid-template-columns:repeat(3, 1fr); gap:2px;
+    padding:0 5vw;
+  }
+  .product-card{
+    background:var(--paper);
+    display:flex; flex-direction:column;
+  }
+  .product-media{
+    aspect-ratio:4/5; position:relative; overflow:hidden; background:var(--paper-dim);
+  }
+  .product-media img, .product-media .ph-photo{
+    position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+    transition:transform 1s var(--ease);
+  }
+  .product-card:hover .product-media img,
+  .product-card:hover .product-media .ph-photo{transform:scale(1.05);}
+  .product-stock{
+    position:absolute; top:14px; left:14px; z-index:2;
+    font-size:10px; padding:5px 10px; background:var(--paper);
+    color:var(--muted); border:1px solid var(--line);
+  }
+  .product-stock.limited{color:var(--oxide); border-color:var(--oxide);}
+  .product-notes-hover{
+    position:absolute; inset:0; z-index:2;
+    display:flex; flex-direction:column; justify-content:flex-end;
+    padding:18px;
+    background:linear-gradient(to top, rgba(20,18,15,.68), transparent 60%);
+    opacity:0; transition:opacity .4s var(--ease);
+    pointer-events:none;
+  }
+  .product-media:hover .product-notes-hover{opacity:1;}
+  .product-notes-hover .pnh-label{font-size:10px; color:rgba(246,243,236,.6); margin-bottom:8px;}
+  .product-notes-hover .pnh-notes{display:flex; flex-direction:column; gap:3px;}
+  .product-notes-hover .pnh-notes span{font-size:12px; color:#fff;}
+  .product-body{padding:20px 4px 0;}
+  .product-body .pn{
+    display:flex; justify-content:space-between; align-items:baseline; gap:10px;
+  }
+  .product-body h4{font-family:var(--serif); font-weight:500; font-size:19px;}
+  .product-body .price{font-size:13px; color:var(--muted); white-space:nowrap;}
+  .product-body .pl{
+    font-family:var(--serif); font-style:italic; font-size:13px; color:var(--muted);
+    margin-top:4px;
+  }
+  .product-meta{
+    display:flex; gap:10px; margin-top:10px; font-size:11px; color:var(--muted);
+  }
+  .product-meta span:not(:last-child)::after{content:'·'; margin-left:10px; color:var(--line);}
+  .product-add{
+    margin-top:16px; margin-bottom:26px;
+    width:100%; padding:12px 0; background:none;
+    border:1px solid var(--ink); color:var(--ink);
+    font-family:var(--sans); font-size:12px; letter-spacing:.02em; cursor:pointer;
+    transition:background .35s var(--ease), color .35s var(--ease);
+  }
+  .product-add:hover{background:var(--ink); color:var(--paper);}
+  .product-add.added{background:var(--oxide); border-color:var(--oxide); color:var(--paper);}
+  .bundle-media{
+    display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(2,1fr); gap:2px;
+  }
+  .bundle-media .bm-cell{position:relative; overflow:hidden;}
+  .bundle-media .bm-cell .ambient{position:absolute; inset:0;}
+
+  /* ---------- LAYERING (The Formula) ---------- */  .layering{padding:120px 0;}
+  .layer-intro{padding:0 5vw; max-width:520px; margin-bottom:48px;}
+  .layer-intro p{font-size:16px; line-height:1.7; color:#4a473e;}
+
+  .layer-chips{
+    display:flex; flex-wrap:wrap; gap:12px;
+    padding:0 5vw; margin-bottom:56px;
+  }
+  .layer-chip{
+    font-family:var(--sans); font-size:14px; color:var(--ink);
+    background:none; border:1px solid var(--line); padding:12px 22px;
+    cursor:pointer; transition:border-color .35s var(--ease), color .35s var(--ease), background .35s var(--ease);
+  }
+  .layer-chip:hover{border-color:var(--oxide);}
+  .layer-chip.selected{border-color:var(--oxide); color:var(--oxide); background:rgba(122,46,46,.05);}
+
+  .layer-result{padding:0 5vw; min-height:220px;}
+  .layer-empty{
+    font-family:var(--serif); font-style:italic; font-size:20px; color:var(--muted);
+    transition:opacity .4s ease;
+  }
+
+  .layer-panel{
+    display:grid; grid-template-columns:auto 1fr; gap:56px; align-items:center;
+    opacity:0; transform:translateY(16px);
+    transition:opacity .6s var(--ease), transform .6s var(--ease);
+  }
+  .layer-panel.show{opacity:1; transform:translateY(0);}
+
+  .layer-pair{display:flex; align-items:center; gap:18px;}
+  .layer-swatch{
+    width:96px; height:120px; position:relative; overflow:hidden; background:var(--paper-dim);
+  }
+  .layer-swatch .sw{position:absolute; inset:0; background-size:cover; background-position:center;}
+  .layer-plus{font-family:var(--serif); font-size:26px; color:var(--muted);}
+
+  .layer-names{margin-bottom:18px; font-size:13px; color:var(--muted); letter-spacing:.01em;}
+
+  .layer-table{display:flex; border-top:1px solid var(--line); border-bottom:1px solid var(--line);}
+  .layer-table div{flex:1; padding:18px 0;}
+  .layer-table div + div{border-left:1px solid var(--line); padding-left:20px;}
+  .layer-table .k{font-size:11px; color:var(--muted); margin-bottom:8px;}
+  .layer-table .v{font-size:15px; line-height:1.5;}
+
+  .layer-reset{
+    margin-top:22px; font-size:12px; color:var(--muted); background:none; border:none;
+    border-bottom:1px solid var(--line); cursor:pointer; font-family:var(--sans);
+  }
+
+  /* ---------- QUIZ TEASER ---------- */
+  .quiz-teaser{padding:0; }
+  .quiz-teaser-inner{
+    margin:0 5vw; padding:56px 48px;
+    background:var(--ink); color:var(--paper);
+    display:flex; justify-content:space-between; align-items:center; gap:40px;
+    flex-wrap:wrap;
+  }
+  .qt-eyebrow{font-size:12px; color:rgba(246,243,236,.55); margin-bottom:10px;}
+  .quiz-teaser-inner h3{font-family:var(--serif); font-weight:400; font-size:clamp(24px,3vw,34px); margin-bottom:10px;}
+  .quiz-teaser-inner p{font-size:14px; color:rgba(246,243,236,.7); max-width:420px; line-height:1.6;}
+  .qt-btn{
+    padding:16px 32px; background:var(--paper); color:var(--ink); border:none;
+    font-family:var(--sans); font-size:13px; cursor:pointer; white-space:nowrap;
+    transition:background .35s var(--ease), color .35s var(--ease);
+  }
+  .qt-btn:hover{background:var(--oxide); color:var(--paper);}
+
+  /* ---------- SCENT QUIZ MODAL ---------- */
+  .quiz-modal{
+    position:fixed; inset:0; z-index:120;
+    display:flex; align-items:center; justify-content:center;
+    pointer-events:none;
+  }
+  .quiz-modal .scrim{position:absolute; inset:0; background:rgba(20,18,15,0); transition:background .5s ease;}
+  .quiz-modal.open .scrim{background:rgba(20,18,15,.6);}
+  .quiz-modal.open{pointer-events:auto;}
+  .quiz-card{
+    position:relative; width:min(560px, 90vw); max-height:86vh; overflow-y:auto;
+    background:var(--paper); padding:52px 44px;
+    opacity:0; transform:translateY(18px) scale(.98);
+    transition:opacity .45s var(--ease), transform .45s var(--ease);
+  }
+  .quiz-modal.open .quiz-card{opacity:1; transform:translateY(0) scale(1);}
+  .quiz-close{
+    position:absolute; top:22px; right:24px; background:none; border:none;
+    font-size:13px; color:var(--muted); cursor:pointer; font-family:var(--sans);
+  }
+  .quiz-progress{display:flex; gap:6px; margin-bottom:32px;}
+  .quiz-progress span{height:2px; flex:1; background:var(--line);}
+  .quiz-progress span.done{background:var(--ink);}
+  .quiz-qnum{font-size:12px; color:var(--muted); margin-bottom:10px;}
+  .quiz-question{font-family:var(--serif); font-weight:400; font-size:clamp(22px,3vw,28px); margin-bottom:26px; line-height:1.3;}
+  .quiz-options{display:flex; flex-direction:column; gap:0;}
+  .quiz-opt{
+    text-align:left; padding:16px 4px; background:none; border:none; border-top:1px solid var(--line);
+    font-family:var(--sans); font-size:15px; color:var(--ink); cursor:pointer;
+    transition:color .3s ease, padding-left .3s var(--ease);
+  }
+  .quiz-opt:last-child{border-bottom:1px solid var(--line);}
+  .quiz-opt:hover{color:var(--oxide); padding-left:12px;}
+
+  .quiz-result{text-align:center;}
+  .quiz-result .qr-label{font-size:12px; color:var(--muted); margin-bottom:14px;}
+  .quiz-result .qr-visual{
+    width:160px; height:200px; margin:0 auto 22px; position:relative; overflow:hidden;
+  }
+  .quiz-result .qr-visual img{width:100%; height:100%; object-fit:cover;}
+  .quiz-result h3{font-family:var(--serif); font-weight:500; font-size:32px; margin-bottom:8px;}
+  .quiz-result .qr-line{font-family:var(--serif); font-style:italic; color:var(--oxide); font-size:16px; margin-bottom:22px;}
+  .quiz-actions{display:flex; flex-direction:column; gap:10px; align-items:center; margin-top:8px;}
+  .quiz-actions button{
+    width:100%; max-width:320px; padding:14px 0; font-family:var(--sans); font-size:13px; cursor:pointer;
+    transition:background .35s var(--ease), color .35s var(--ease);
+  }
+  .qa-primary{background:var(--ink); color:var(--paper); border:1px solid var(--ink);}
+  .qa-primary:hover{background:transparent; color:var(--ink);}
+  .qa-share{background:none; border:1px solid var(--line); color:var(--ink); display:flex; align-items:center; justify-content:center; gap:8px;}
+  .qa-share:hover{border-color:var(--oxide); color:var(--oxide);}
+  .qa-retake{background:none; border:none; color:var(--muted); text-decoration:underline; padding:6px 0;}
+  .quiz-share-note{font-size:11px; color:var(--muted); margin-top:6px;}
+
+  /* ---------- STORY CARD (off-screen, rendered to image) ---------- */
+  .story-card{
+    position:fixed; left:-9999px; top:0;
+    width:1080px; height:1920px;
+    background:var(--paper);
+    display:flex; flex-direction:column; justify-content:space-between;
+    padding:90px 80px;
+    font-family:var(--sans);
+  }
+  .story-card .sc-media{position:absolute; inset:0; overflow:hidden;}
+  .story-card .sc-media img{width:100%; height:100%; object-fit:cover;}
+  .story-card .sc-scrim{position:absolute; inset:0; background:linear-gradient(180deg, rgba(246,243,236,.15), rgba(246,243,236,.92) 60%);}
+  .story-card .sc-top{position:relative; z-index:2; display:flex; justify-content:space-between; align-items:center;}
+  .story-card .sc-top img{height:44px;}
+  .story-card .sc-badge{font-size:26px; color:var(--muted); letter-spacing:.02em;}
+  .story-card .sc-bottom{position:relative; z-index:2;}
+  .story-card .sc-label{font-size:26px; color:var(--muted); margin-bottom:20px;}
+  .story-card .sc-name{font-family:var(--serif); font-weight:500; font-size:110px; line-height:1.02; color:var(--ink); margin-bottom:26px;}
+  .story-card .sc-line{font-family:var(--serif); font-style:italic; font-size:34px; color:var(--oxide); margin-bottom:44px;}
+  .story-card .sc-notes{display:flex; gap:16px; flex-wrap:wrap;}
+  .story-card .sc-notes span{font-size:22px; padding:14px 24px; border:2px solid var(--line); color:var(--muted);}
+
+  /* ---------- SECTION LABEL ---------- */
+  .section-label{
+    display:flex; align-items:baseline; gap:14px;
+    padding:0 5vw; margin-bottom:40px;
+  }
+  .section-label .num{
+    font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  }
+  .section-label h2{
+    font-family:var(--serif); font-weight:400; font-size:28px;
+  }
+  .section-label .rule{flex:1; height:1px; background:var(--line); position:relative; overflow:hidden;}
+  .section-label .rule::after{
+    content:''; position:absolute; inset:0; background:var(--ink);
+    transform:scaleX(0); transform-origin:left;
+    transition:transform 1.2s var(--ease) .15s;
+  }
+  .section-label.in-view .rule::after{transform:scaleX(1);}
+
+  section{padding:120px 0;}
+
+  /* ---------- GRID ---------- */
+  .grid-wrap{padding:0 5vw;}
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    grid-auto-rows:220px;
+    gap:2px;
+  }
+  .tile{
+    position:relative;
+    grid-column:span 1; grid-row:span 1;
+    background:var(--ink);
+    overflow:hidden;
+    cursor:pointer;
+  }
+  .tile.big{grid-column:span 2; grid-row:span 2;}
+  .tile.wide{grid-column:span 2; grid-row:span 1;}
+  .tile .swatch{
+    position:absolute; inset:0;
+    background:
+      radial-gradient(120% 140% at 20% 15%, rgba(255,255,255,.10), transparent 55%),
+      var(--tile-color);
+    transition:transform 1.1s cubic-bezier(.2,.7,.2,1);
+  }
+  .tile:hover .swatch{transform:scale(1.06);}
+  .tile .overlay{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; justify-content:flex-end;
+    padding:22px;
+    background:linear-gradient(to top, rgba(0,0,0,.55), transparent 55%);
+    color:#fff;
+  }
+  .tile .tag{
+    font-size:11px; color:rgba(255,255,255,.6);
+    font-variant-numeric:tabular-nums;
+    margin-bottom:6px;
+    opacity:0; transform:translateY(6px);
+    transition:opacity .4s ease, transform .4s ease;
+  }
+  .tile .name{
+    font-family:var(--serif); font-weight:400;
+    font-size:clamp(20px, 2.4vw, 34px);
+  }
+  .tile .notes{
+    font-size:12px; color:rgba(255,255,255,.65);
+    margin-top:8px; max-width:80%;
+    opacity:0; transform:translateY(6px);
+    transition:opacity .4s ease .05s, transform .4s ease .05s;
+  }
+  .tile:hover .tag, .tile:hover .notes{opacity:1; transform:translateY(0);}
+
+  /* ---------- LAB / PHILOSOPHY ---------- */
+  .lab{
+    padding:140px 5vw;
+    display:flex; justify-content:center;
+  }
+  .lab-content{max-width:720px;}
+  .lab-content p{
+    font-family:var(--serif);
+    font-weight:400;
+    font-size:clamp(24px, 3.4vw, 40px);
+    line-height:1.35;
+  }
+  .lab-content p em{font-style:italic; color:var(--oxide);}
+  .lab-meta{
+    display:flex; gap:60px; margin-top:56px;
+    font-size:13px; color:var(--muted);
+  }
+  .lab-meta div span{display:block; color:var(--ink); font-size:15px; margin-top:4px;}
+
+  /* ---------- READING THE SCALE ---------- */
+  .scale-strip{padding:0 5vw 100px;}
+  .scale-strip .ss-intro{
+    font-size:14px; color:var(--muted); max-width:420px; margin-bottom:44px;
+  }
+  .scale-row{
+    display:flex; align-items:flex-end; gap:0;
+    border-top:1px solid var(--line);
+  }
+  .scale-point{
+    flex:1; padding-top:18px; position:relative;
+  }
+  .scale-point::before{
+    content:''; position:absolute; top:-1px; left:0; width:1px; height:10px; background:var(--ink);
+  }
+  .scale-point .sp-val{font-family:var(--serif); font-size:clamp(22px,3vw,32px); margin-bottom:6px;}
+  .scale-point .sp-name{font-size:12px; color:var(--muted);}
+
+  /* ---------- FEATURED DETAIL ---------- */
+  .featured{
+    padding:0 5vw;
+    display:grid; grid-template-columns:1fr 1fr; gap:60px; align-items:center;
+  }
+  .featured .visual{
+    aspect-ratio:4/5;
+    background:
+      radial-gradient(140% 120% at 25% 10%, rgba(255,255,255,.14), transparent 55%),
+      var(--exp-color);
+    position:relative;
+    overflow:hidden;
+  }
+  .featured .visual .ring{
+    position:absolute; border:1px solid rgba(255,255,255,.35); border-radius:50%;
+    animation:expand 6s ease-in-out infinite;
+  }
+  .featured .visual .ring.r1{width:60%; height:60%; top:20%; left:20%;}
+  .featured .visual .ring.r2{width:90%; height:90%; top:5%; left:5%; animation-delay:.8s;}
+  @keyframes expand{ 0%,100%{transform:scale(1); opacity:.5;} 50%{transform:scale(1.05); opacity:.9;} }
+
+  .featured .copy .tag-line{
+    font-size:12px; color:var(--muted); margin-bottom:16px; font-variant-numeric:tabular-nums;
+  }
+  .featured .copy h3{
+    font-family:var(--serif); font-weight:400; font-size:clamp(36px,4vw,56px);
+    margin-bottom:20px;
+  }
+  .featured .copy .desc{
+    font-size:16px; line-height:1.7; color:#4a473e; max-width:440px; margin-bottom:28px;
+  }
+  .notes-row{display:flex; gap:0; border-top:1px solid var(--line);}
+  .notes-row div{flex:1; padding:16px 0; border-right:1px solid var(--line);}
+  .notes-row div:last-child{border-right:none;}
+  .notes-row div .k{font-size:11px; color:var(--muted); margin-bottom:6px;}
+  .notes-row div .v{font-size:14px;}
+
+  /* ---------- PROCESS STRIP ---------- */
+  .process{padding:0 5vw;}
+  .process-grid{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:2px;
+  }
+  .process-cell{
+    aspect-ratio:1; background:var(--paper-dim);
+    border:1px solid var(--line);
+    display:flex; align-items:flex-end; padding:14px;
+    font-size:12px; color:var(--muted);
+    position:relative; overflow:hidden;
+  }
+  .process-cell::before{
+    content:'';
+    position:absolute; inset:0;
+    background:linear-gradient(135deg, rgba(28,27,24,.03), rgba(28,27,24,0));
+  }
+
+  /* ---------- LAB JOURNAL ---------- */
+  .journal{padding:120px 0;}
+  .journal-list{padding:0 5vw;}
+  .journal-entry{
+    border-top:1px solid var(--line);
+    padding:28px 0;
+    cursor:pointer;
+  }
+  .journal-entry:last-child{border-bottom:1px solid var(--line);}
+  .je-head{display:flex; justify-content:space-between; align-items:baseline; gap:20px;}
+  .je-head .je-date{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; white-space:nowrap;}
+  .je-head h4{font-family:var(--serif); font-weight:400; font-size:clamp(19px,2.4vw,24px); flex:1;}
+  .je-toggle{font-size:18px; color:var(--muted); transition:transform .35s var(--ease);}
+  .journal-entry.open .je-toggle{transform:rotate(45deg);}
+  .je-body{
+    max-height:0; overflow:hidden;
+    transition:max-height .5s var(--ease);
+  }
+  .je-body p{
+    font-size:15px; line-height:1.7; color:#4a473e; max-width:600px;
+    padding-top:16px;
+  }
+
+  /* ---------- SOCIAL PROOF ---------- */
+  .proof{padding:100px 5vw; display:flex; gap:56px; flex-wrap:wrap;}
+  .proof-item{flex:1; min-width:220px;}
+  .proof-item .pq{
+    font-family:var(--serif); font-style:italic; font-size:19px; line-height:1.5;
+    margin-bottom:16px;
+  }
+  .proof-item .pa{font-size:12px; color:var(--muted);}
+
+  /* ---------- FOOTER ---------- */
+  footer{
+    padding:100px 5vw 40px;
+    border-top:1px solid var(--line);
+    margin-top:140px;
+  }
+  .foot-top{
+    display:flex; justify-content:space-between; align-items:flex-end;
+    flex-wrap:wrap; gap:40px; margin-bottom:80px;
+  }
+  .foot-top h4{
+    font-family:var(--serif); font-weight:400; font-size:clamp(28px,4vw,44px); max-width:520px;
+  }
+  .foot-form{display:flex; border-bottom:1px solid var(--ink); padding-bottom:10px; min-width:280px;}
+  .foot-form input{
+    border:none; background:none; outline:none; font-size:14px; flex:1; font-family:var(--sans); color:var(--ink);
+  }
+  .foot-form input::placeholder{color:var(--muted);}
+  .foot-form button{
+    border:none; background:none; font-size:13px; cursor:pointer; color:var(--ink); font-family:var(--sans);
+  }
+  .foot-bottom{
+    display:flex; justify-content:space-between; font-size:12px; color:var(--muted);
+    flex-wrap:wrap; gap:12px;
+  }
+  .foot-bottom .socials{display:flex; gap:20px;}
+
+  /* ---------- DETAIL OVERLAY (click animation) ---------- */
+  .overlay-panel{
+    position:fixed; inset:0; z-index:100;
+    display:flex; align-items:flex-end;
+    pointer-events:none;
+  }
+  .overlay-panel .scrim{
+    position:absolute; inset:0; background:rgba(20,18,15,.0);
+    transition:background .5s ease;
+  }
+  .overlay-panel.open .scrim{background:rgba(20,18,15,.55);}
+  .overlay-panel.open{pointer-events:auto;}
+  .overlay-card{
+    position:relative;
+    background:var(--paper);
+    width:100%;
+    max-height:88vh;
+    margin:0 auto;
+    padding:64px 8vw 60px;
+    transform:translateY(100%);
+    transition:transform .55s cubic-bezier(.2,.8,.2,1);
+    overflow-y:auto;
+  }
+  .overlay-panel.open .overlay-card{transform:translateY(0%);}
+  .overlay-close{
+    position:absolute; top:28px; right:8vw;
+    font-size:13px; color:var(--muted); cursor:pointer; background:none; border:none; font-family:var(--sans);
+  }
+  .overlay-inner{display:grid; grid-template-columns:1fr 1.4fr; gap:56px; align-items:start;}
+  .overlay-visual{aspect-ratio:4/5; position:relative; overflow:hidden;}
+  .overlay-visual .sw{position:absolute; inset:0; background:var(--tile-color);}
+  .overlay-tag{font-size:12px; color:var(--muted); margin-bottom:14px; font-variant-numeric:tabular-nums;}
+  .overlay-title{font-family:var(--serif); font-weight:400; font-size:clamp(36px,4.4vw,60px); margin-bottom:6px;}
+  .overlay-line{font-family:var(--serif); font-style:italic; font-size:18px; color:var(--oxide); margin-bottom:22px;}
+  .overlay-desc{font-size:16px; line-height:1.75; color:#4a473e; max-width:460px; margin-bottom:26px;}
+  .overlay-notes{display:flex; gap:10px; flex-wrap:wrap;}
+  .overlay-notes span{
+    font-size:12px; padding:8px 14px; border:1px solid var(--line); color:var(--muted);
+  }
+  .overlay-shop{
+    margin-top:28px; padding-top:22px; border-top:1px solid var(--line);
+    display:flex; align-items:center; gap:20px; flex-wrap:wrap;
+  }
+  .overlay-shop .price{font-family:var(--serif); font-size:20px;}
+  .overlay-shop .meta{font-size:12px; color:var(--muted);}
+  .overlay-shop .meta span:not(:last-child)::after{content:'·'; margin-left:8px; color:var(--line);}
+  .overlay-shop button{
+    margin-left:auto; padding:12px 26px; background:var(--ink); color:var(--paper);
+    border:1px solid var(--ink); font-family:var(--sans); font-size:12px; cursor:pointer;
+    transition:background .35s var(--ease), color .35s var(--ease);
+  }
+  .overlay-shop button:hover{background:transparent; color:var(--ink);}
+  .overlay-shop button.added{background:var(--oxide); border-color:var(--oxide); color:var(--paper);}
+
+  @media (max-width:860px){
+    .grid{grid-template-columns:repeat(2,1fr); grid-auto-rows:180px;}
+    .tile.big{grid-column:span 2; grid-row:span 2;}
+    .tile.wide{grid-column:span 2; grid-row:span 1;}
+    .featured{grid-template-columns:1fr;}
+    .overlay-inner{grid-template-columns:1fr;}
+    .lab-meta{flex-wrap:wrap; gap:28px;}
+    .layer-panel{grid-template-columns:1fr;}
+    .layer-pair{justify-content:center;}
+    .shop-grid{grid-template-columns:repeat(2,1fr);}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important; transition:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<div class="grain"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+<div class="cursor-dot" id="cursorDot"></div>
+
+<!-- HERO (A24-style) -->
+<div class="hero" id="hero">
+  <div class="hero-bg" id="heroBg"></div>
+  <div class="hero-scrim"></div>
+
+  <div class="hero-nav">
+    <div class="word"><img src="duftlab-logo.png" alt="Duftlab"></div>
+    <div class="links">
+      <span class="links-item" onclick="openQuiz()"><span class="rec"></span> Scent Quiz</span>
+      <span class="links-item" onclick="document.querySelector('#lab').scrollIntoView({behavior:'smooth'})">The Lab</span>
+    </div>
+  </div>
+
+  <div class="hero-stack">
+    <div class="hero-list" id="heroList"></div>
+
+    <div class="hero-info">
+      <div class="line" id="heroLine"></div>
+      <button id="heroDetailBtn">View composition</button>
+    </div>
+  </div>
+
+  <div class="scroll-cue"><span class="arrow">↓</span> Scroll to observe</div>
+</div>
+
+<!-- THE LAB -->
+<section id="lab" class="lab">
+  <div class="lab-content" data-reveal>
+    <p>We do not begin with a scent we want to make. We begin with a <em>question</em> — a variable, a threshold, a degree of change — and let the fragrance be whatever answers it.</p>
+    <div class="lab-meta">
+      <div>Method<span>Iterative</span></div>
+      <div>Discipline<span>Olfactive Science</span></div>
+      <div>Output<span>6 Compositions</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- READING THE SCALE -->
+<section class="scale-strip" data-reveal>
+  <div class="ss-intro">Reading the scale. Four compositions are named for temperature scales — different instruments, all measuring the same warmth, each reading it differently.</div>
+  <div class="scale-row">
+    <div class="scale-point"><div class="sp-val">0°C</div><div class="sp-name">Celsius</div></div>
+    <div class="scale-point"><div class="sp-val">32°F</div><div class="sp-name">Fahrenheit</div></div>
+    <div class="scale-point"><div class="sp-val">273K</div><div class="sp-name">Kelvin</div></div>
+    <div class="scale-point"><div class="sp-val">0°Ré</div><div class="sp-name">Réaumur</div></div>
+  </div>
+</section>
+
+<!-- QUIZ TEASER -->
+<section class="quiz-teaser" data-reveal>
+  <div class="quiz-teaser-inner">
+    <div>
+      <div class="qt-eyebrow">5 questions · 1 match</div>
+      <h3>Not sure where to start?</h3>
+      <p>Answer five short questions and we'll match you to the composition closest to how you think.</p>
+    </div>
+    <button class="qt-btn" onclick="openQuiz()">Take the Scent Quiz</button>
+  </div>
+</section>
+
+<!-- SHOP / CATALOG -->
+<section class="shop">
+  <div class="section-label" data-reveal>
+    <span class="num">02</span>
+    <h2>The Catalog</h2>
+    <span class="rule"></span>
+  </div>
+  <div class="shop-grid" id="shopGrid" data-reveal></div>
+</section>
+
+<!-- LAYERING -->
+<section id="layering" class="layering" data-reveal>
+  <div class="section-label">
+    <span class="num">03</span>
+    <h2>The Formula</h2>
+    <span class="rule"></span>
+  </div>
+  <div class="layer-intro">
+    <p>Two compositions. One reaction. Choose any pair below to see how they read when layered on skin.</p>
+  </div>
+  <div class="layer-chips" id="layerChips"></div>
+  <div class="layer-result" id="layerResult">
+    <p class="layer-empty">Select two compositions to begin.</p>
+  </div>
+</section>
+
+<!-- FEATURED -->
+<section>
+  <div class="section-label" data-reveal>
+    <span class="num">04</span>
+    <h2>Featured Specimen</h2>
+    <span class="rule"></span>
+  </div>
+  <div class="featured" data-reveal>
+    <div class="visual" style="background-image:url('experimental.png'); background-size:cover; background-position:center;">
+    </div>
+    <div class="copy">
+      <div class="tag-line">Specimen No. 01</div>
+      <h3>Experimental</h3>
+      <p class="desc">Before a scent becomes a formula, it is a question asked in the dark — assembled, dismantled, assembled again. Experimental holds no fixed structure; it exists mid-trial, refusing to resolve into a single accord.</p>
+      <div class="notes-row">
+        <div><div class="k">Top</div><div class="v">Ozone</div></div>
+        <div><div class="k">Mid</div><div class="v">Cold Iron</div></div>
+        <div><div class="k">Base</div><div class="v">Green Static</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROCESS STRIP -->
+<section class="process">
+  <div class="section-label" data-reveal>
+    <span class="num">05</span>
+    <h2>Notes from the Bench</h2>
+    <span class="rule"></span>
+  </div>
+  <div class="process-grid" data-reveal>
+    <div class="process-cell">Distillation</div>
+    <div class="process-cell">Trial 04</div>
+    <div class="process-cell">Calibration</div>
+    <div class="process-cell">Dry-down, hr 6</div>
+  </div>
+</section>
+
+<!-- LAB JOURNAL -->
+<section class="journal">
+  <div class="section-label" data-reveal>
+    <span class="num">06</span>
+    <h2>The Lab Journal</h2>
+    <span class="rule"></span>
+  </div>
+  <div class="journal-list" id="journalList"></div>
+</section>
+
+<!-- SOCIAL PROOF -->
+<section class="proof" data-reveal>
+  <div class="proof-item">
+    <div class="pq">"Wears like a hypothesis I keep wanting to test again."</div>
+    <div class="pa">Early tester, Jakarta</div>
+  </div>
+  <div class="proof-item">
+    <div class="pq">"Didn't expect a fragrance to feel like an idea instead of a smell."</div>
+    <div class="pa">Early tester, Bandung</div>
+  </div>
+  <div class="proof-item">
+    <div class="pq">"Kelvin is the first 'quiet' scent I've actually noticed."</div>
+    <div class="pa">Early tester, Singapore</div>
+  </div>
+</section>
+
+<footer data-reveal>
+  <div class="foot-top">
+    <h4>Join the record. New compositions, first.</h4>
+    <form class="foot-form" onsubmit="return false;">
+      <input type="email" placeholder="Email address" />
+      <button type="submit">Subscribe</button>
+    </form>
+  </div>
+  <div class="foot-bottom">
+    <div>© 2026 Duftlab. All formulas reserved.</div>
+    <div class="socials"><span>Instagram</span><span>Contact</span></div>
+  </div>
+</footer>
+
+<!-- DETAIL OVERLAY -->
+<div class="overlay-panel" id="overlayPanel">
+  <div class="scrim" onclick="closeOverlay()"></div>
+  <div class="overlay-card">
+    <button class="overlay-close" onclick="closeOverlay()">Close ✕</button>
+    <div class="overlay-inner">
+      <div class="overlay-visual"><div class="sw" id="ovColor"></div></div>
+      <div>
+        <div class="overlay-tag" id="ovTag">Specimen No. 01</div>
+        <div class="overlay-title" id="ovTitle">Experimental</div>
+        <div class="overlay-line" id="ovLine">The hypothesis before the proof.</div>
+        <p class="overlay-desc" id="ovDesc"></p>
+        <div class="overlay-notes" id="ovNotes"></div>
+        <div class="overlay-shop" id="ovShop"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCENT QUIZ MODAL -->
+<div class="quiz-modal" id="quizModal">
+  <div class="scrim" onclick="closeQuiz()"></div>
+  <div class="quiz-card" id="quizCard">
+    <button class="quiz-close" onclick="closeQuiz()">Close ✕</button>
+    <div id="quizBody"></div>
+  </div>
+</div>
+
+<!-- STORY CARD (off-screen, rendered to image for sharing) -->
+<div class="story-card" id="storyCard">
+  <div class="sc-media" id="scMedia"></div>
+  <div class="sc-scrim"></div>
+  <div class="sc-top">
+    <img src="duftlab-logo.png" alt="Duftlab">
+    <div class="sc-badge" id="scBadge">No. 01</div>
+  </div>
+  <div class="sc-bottom">
+    <div class="sc-label">Your Composition</div>
+    <div class="sc-name" id="scName">Experimental</div>
+    <div class="sc-line" id="scLine">The hypothesis before the proof.</div>
+    <div class="sc-notes" id="scNotes"></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+const compositions = [
+  { n:"01", name:"Experimental", color:"#EDE8DC", accent:"#8A8FA3", photo:"experimental.png",
+    price:"Rp 780.000", size:"50 mL", type:"Eau de Parfum", stock:"Available",
+    line:"The hypothesis before the proof.",
+    desc:"Before a scent becomes a formula, it is a question asked in the dark — assembled, dismantled, assembled again. Experimental holds no fixed structure; it exists mid-trial, refusing to resolve into a single accord.",
+    notes:["Ozone","Cold Iron","Green Static"] },
+  { n:"02", name:"Conceptual", color:"#EDE8DC", accent:"#9AA394", photo:"conceptual.png",
+    price:"Rp 780.000", size:"50 mL", type:"Eau de Parfum", stock:"Available",
+    line:"An idea, not yet a form.",
+    desc:"Conceptual is the scent equivalent of a sketch before the painting — an outline of an idea that resists completion. It suggests warmth, skin, and paper, without ever committing to any of them.",
+    notes:["Vetiver","Chalk","Musk"] },
+  { n:"03", name:"Celsius", color:"#E6E1D3", accent:"#5D7A85", photo:null,
+    price:"Rp 650.000", size:"50 mL", type:"Eau de Parfum", stock:"Available",
+    line:"Zero is where water remembers itself.",
+    desc:"Named for the scale that begins at freezing and ends at boiling, Celsius moves through both extremes — a cold mineral opening that thaws into something resinous and warm by the skin's own heat.",
+    notes:["Frost Accord","Amber","Skin Musk"] },
+  { n:"04", name:"Fahrenheit", color:"#E9E2D0", accent:"#A66B4A", photo:null,
+    price:"Rp 650.000", size:"50 mL", type:"Eau de Parfum", stock:"Available",
+    line:"The same warmth, measured differently.",
+    desc:"Fahrenheit takes the same thermal question as Celsius and answers it with a wider, more theatrical range — sharper highs, slower descents, and a spiced, sun-warmed dry-down.",
+    notes:["Pink Pepper","Tobacco Leaf","Amber Resin"] },
+  { n:"05", name:"Kelvin", color:"#E4E4DC", accent:"#B7B9BD", photo:null,
+    price:"Rp 920.000", size:"50 mL", type:"Extrait de Parfum", stock:"Limited Batch",
+    line:"Absolute zero has no negative.",
+    desc:"Kelvin begins where matter stops moving — a scent built from stillness rather than heat. Transparent, mineral, and quiet, it is the closest Duftlab has come to formulating silence.",
+    notes:["Aldehydes","Salt","White Musk"] },
+  { n:"06", name:"Reaumur", color:"#E7E3D2", accent:"#6E7550", photo:null,
+    price:"Rp 650.000", size:"50 mL", type:"Eau de Parfum", stock:"Archive Release",
+    line:"A scale the world stopped using.",
+    desc:"Reaumur is named for a measurement history has largely forgotten — obsolete, imprecise, but still true to those who used it. Green, resinous, and slightly out of step with modern perfumery, it rewards patience.",
+    notes:["Oakmoss","Dry Woods","Green Galbanum"] },
+];
+
+/* ---- HERO: background layers + title list ---- */
+const heroBg = document.getElementById('heroBg');
+const heroList = document.getElementById('heroList');
+const heroLine = document.getElementById('heroLine');
+const heroDetailBtn = document.getElementById('heroDetailBtn');
+let activeIndex = 0;
+
+compositions.forEach((c, i) => {
+  const layer = document.createElement('div');
+  layer.className = 'layer' + (i === 0 ? ' active' : '');
+  layer.style.setProperty('--layer-color', c.color);
+  if (c.photo) layer.style.setProperty('--layer-image', `url('${c.photo}')`);
+  layer.dataset.index = i;
+  heroBg.appendChild(layer);
+
+  const item = document.createElement('div');
+  item.className = 'item' + (i === 0 ? ' active' : '');
+  item.innerHTML = `
+    <span class="t" style="animation-delay:${0.15 + i * 0.06}s">${c.name}</span>
+    <span class="tag" style="animation-delay:${0.25 + i * 0.06}s">No. ${c.n}</span>
+  `;
+  item.addEventListener('click', () => setActive(i));
+  heroList.appendChild(item);
+});
+
+function setActive(i){
+  activeIndex = i;
+  [...heroBg.children].forEach((l, idx) => l.classList.toggle('active', idx === i));
+  [...heroList.children].forEach((it, idx) => it.classList.toggle('active', idx === i));
+  heroLine.textContent = compositions[i].line;
+  heroLine.classList.add('show');
+  heroDetailBtn.classList.add('show');
+}
+setActive(0);
+heroDetailBtn.addEventListener('click', () => openOverlay(compositions[activeIndex]));
+
+function openOverlay(c){
+  const ov = document.getElementById('ovColor');
+  ov.style.background = c.photo ? `url('${c.photo}') center/cover` : 'none';
+  ov.innerHTML = c.photo ? '' : ambientDiv(c);
+  document.getElementById('ovTag').textContent = "Specimen No. " + c.n;
+  document.getElementById('ovTitle').textContent = c.name;
+  document.getElementById('ovLine').textContent = c.line;
+  document.getElementById('ovDesc').textContent = c.desc;
+  document.getElementById('ovNotes').innerHTML = c.notes.map(n => `<span>${n}</span>`).join('');
+  document.getElementById('ovShop').innerHTML = `
+    <div class="price">${c.price}</div>
+    <div class="meta"><span>${c.size}</span><span>${c.type}</span><span>${c.stock}</span></div>
+    <button onclick="this.textContent='Added ✓'; this.classList.add('added');">Add to Bag</button>
+  `;
+  document.getElementById('overlayPanel').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeOverlay(){
+  document.getElementById('overlayPanel').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+/* ---- ambient color placeholder (no photo yet) ---- */
+function ambientDiv(c){
+  return `<div class="ambient" style="--amb-accent:${c.accent}; background:radial-gradient(130% 120% at 22% 12%, rgba(255,255,255,.6), transparent 60%), ${c.color};"></div>`;
+}
+
+/* ---- SHOP / CATALOG ---- */
+const shopGrid = document.getElementById('shopGrid');
+
+/* Discovery Set — bundle card, prepended first */
+const bundleCard = document.createElement('div');
+bundleCard.className = 'product-card';
+bundleCard.innerHTML = `
+  <div class="product-media bundle-media">
+    <span class="product-stock">Available</span>
+    ${compositions.map(c => `<div class="bm-cell">${ambientDiv(c)}${c.photo ? `<img src="${c.photo}" alt="${c.name}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">` : ''}</div>`).join('')}
+  </div>
+  <div class="product-body">
+    <div class="pn"><h4>The Discovery Set</h4><span class="price">Rp 890.000</span></div>
+    <div class="pl">One mini of each composition — the full spectrum, in a single box.</div>
+    <div class="product-meta"><span>6 × 10 mL</span><span>All Compositions</span></div>
+    <button class="product-add">Add to Bag</button>
+  </div>
+`;
+const bundleAddBtn = bundleCard.querySelector('.product-add');
+bundleAddBtn.addEventListener('click', () => {
+  bundleAddBtn.textContent = 'Added ✓';
+  bundleAddBtn.classList.add('added');
+  setTimeout(() => { bundleAddBtn.textContent = 'Add to Bag'; bundleAddBtn.classList.remove('added'); }, 1800);
+});
+shopGrid.appendChild(bundleCard);
+
+compositions.forEach((c, i) => {
+  const card = document.createElement('div');
+  card.className = 'product-card';
+  const mediaInner = c.photo
+    ? `<img src="${c.photo}" alt="${c.name}">`
+    : ambientDiv(c);
+  card.innerHTML = `
+    <div class="product-media">
+      <span class="product-stock${c.stock !== 'Available' ? ' limited' : ''}">${c.stock}</span>
+      ${mediaInner}
+      <div class="product-notes-hover">
+        <div class="pnh-label">Top · Middle · Base</div>
+        <div class="pnh-notes">${c.notes.map(n => `<span>${n}</span>`).join('')}</div>
+      </div>
+    </div>
+    <div class="product-body">
+      <div class="pn"><h4>${c.name}</h4><span class="price">${c.price}</span></div>
+      <div class="pl">${c.line}</div>
+      <div class="product-meta"><span>${c.size}</span><span>${c.type}</span></div>
+      <button class="product-add">Add to Bag</button>
+    </div>
+  `;
+  card.querySelector('.product-media').addEventListener('click', () => openOverlay(c));
+  card.querySelector('h4').style.cursor = 'pointer';
+  card.querySelector('h4').addEventListener('click', () => openOverlay(c));
+  const addBtn = card.querySelector('.product-add');
+  addBtn.addEventListener('click', () => {
+    addBtn.textContent = 'Added ✓';
+    addBtn.classList.add('added');
+    setTimeout(() => { addBtn.textContent = 'Add to Bag'; addBtn.classList.remove('added'); }, 1800);
+  });
+  shopGrid.appendChild(card);
+});
+
+/* ---- THE FORMULA (layering tool) ---- */
+const layerChips = document.getElementById('layerChips');
+const layerResult = document.getElementById('layerResult');
+let layerSelected = [];
+
+compositions.forEach((c, i) => {
+  const chip = document.createElement('button');
+  chip.className = 'layer-chip';
+  chip.textContent = c.name;
+  chip.addEventListener('click', () => toggleLayer(i, chip));
+  layerChips.appendChild(chip);
+});
+
+function toggleLayer(i, chipEl){
+  const idx = layerSelected.indexOf(i);
+  if (idx > -1){
+    layerSelected.splice(idx, 1);
+    chipEl.classList.remove('selected');
+  } else {
+    if (layerSelected.length >= 2){
+      const removedIdx = layerSelected.shift();
+      layerChips.children[removedIdx].classList.remove('selected');
+    }
+    layerSelected.push(i);
+    chipEl.classList.add('selected');
+  }
+  renderLayerResult();
+}
+
+function renderLayerResult(){
+  if (layerSelected.length < 2){
+    layerResult.innerHTML = `<p class="layer-empty">${layerSelected.length === 0 ? 'Select two compositions to begin.' : 'One more — pick another.'}</p>`;
+    return;
+  }
+  const [a, b] = layerSelected.map(i => compositions[i]);
+  const swA = a.photo ? `background-image:url('${a.photo}')` : '';
+  const swB = b.photo ? `background-image:url('${b.photo}')` : '';
+  layerResult.innerHTML = `
+    <div class="layer-panel">
+      <div class="layer-pair">
+        <div class="layer-swatch"><div class="sw" style="${swA}">${a.photo ? '' : ambientDiv(a)}</div></div>
+        <div class="layer-plus">+</div>
+        <div class="layer-swatch"><div class="sw" style="${swB}">${b.photo ? '' : ambientDiv(b)}</div></div>
+      </div>
+      <div>
+        <div class="layer-names">${a.name} — ${b.name}</div>
+        <div class="layer-table">
+          <div><div class="k">Top</div><div class="v">${a.notes[0]}, ${b.notes[0]}</div></div>
+          <div><div class="k">Middle</div><div class="v">${a.notes[1]}, ${b.notes[1]}</div></div>
+          <div><div class="k">Base</div><div class="v">${a.notes[2]}, ${b.notes[2]}</div></div>
+        </div>
+        <button class="layer-reset" onclick="resetLayer()">Reset selection</button>
+      </div>
+    </div>
+  `;
+  requestAnimationFrame(() => {
+    const panel = layerResult.querySelector('.layer-panel');
+    if (panel) requestAnimationFrame(() => panel.classList.add('show'));
+  });
+}
+
+function resetLayer(){
+  layerSelected = [];
+  [...layerChips.children].forEach(c => c.classList.remove('selected'));
+  renderLayerResult();
+}
+
+/* ---- LAB JOURNAL ---- */
+const journalEntries = [
+  { date:"Trial №03 — Mar 2026", title:"The First Variable",
+    body:"Experimental wasn't designed to be worn. It was designed to be argued with. The first batch was rejected four times before we stopped trying to resolve it — and left the imbalance in, on purpose. It became the composition that started everything else." },
+  { date:"Trial №07 — Jun 2026", title:"Measuring What Can't Be Measured",
+    body:"We spent longer on Kelvin's silence than on any other composition's noise. Most fragrance work is about adding until something is felt. This was about subtracting until something remained — a scent built the way you'd build a vacuum." },
+  { date:"Trial №12 — Aug 2026", title:"On Failure as Data",
+    body:"Reaumur was a mistake we almost discarded — a batch calibrated to a scale nobody uses anymore. We kept it because obsolescence is still a kind of accuracy. Some instruments stop being used. They don't stop being correct." },
+];
+
+const journalList = document.getElementById('journalList');
+journalEntries.forEach((e, i) => {
+  const entry = document.createElement('div');
+  entry.className = 'journal-entry';
+  entry.innerHTML = `
+    <div class="je-head">
+      <div class="je-date">${e.date}</div>
+      <h4>${e.title}</h4>
+      <span class="je-toggle">+</span>
+    </div>
+    <div class="je-body"><p>${e.body}</p></div>
+  `;
+  entry.addEventListener('click', () => {
+    const body = entry.querySelector('.je-body');
+    const isOpen = entry.classList.contains('open');
+    document.querySelectorAll('.journal-entry.open').forEach(o => {
+      o.classList.remove('open');
+      o.querySelector('.je-body').style.maxHeight = null;
+    });
+    if (!isOpen){
+      entry.classList.add('open');
+      body.style.maxHeight = body.scrollHeight + 'px';
+    }
+  });
+  journalList.appendChild(entry);
+});
+/* ---- CUSTOM CURSOR ---- */
+const cursorDot = document.getElementById('cursorDot');
+const cursorRing = document.getElementById('cursorRing');
+let mouseX = innerWidth/2, mouseY = innerHeight/2, ringX = mouseX, ringY = mouseY;
+window.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
+(function tick(){
+  ringX += (mouseX - ringX) * 0.18;
+  ringY += (mouseY - ringY) * 0.18;
+  cursorDot.style.left = mouseX + 'px'; cursorDot.style.top = mouseY + 'px';
+  cursorRing.style.left = ringX + 'px'; cursorRing.style.top = ringY + 'px';
+  requestAnimationFrame(tick);
+})();
+document.querySelectorAll('.hero-list .item, .hero-info button, .hero-nav .links-item, .foot-form button, .overlay-close, footer h4, .foot-form input, .layer-chip, .product-add, .product-media, .product-body h4')
+  .forEach(el => {
+    el.addEventListener('mouseenter', () => cursorRing.classList.add('hover'));
+    el.addEventListener('mouseleave', () => cursorRing.classList.remove('hover'));
+  });
+document.addEventListener('mouseover', e => {
+  if (e.target.closest('.quiz-opt, .qa-primary, .qa-share, .qa-retake, .quiz-close, .qt-btn, .journal-entry')) cursorRing.classList.add('hover');
+});
+document.addEventListener('mouseout', e => {
+  if (e.target.closest('.quiz-opt, .qa-primary, .qa-share, .qa-retake, .quiz-close, .qt-btn, .journal-entry')) cursorRing.classList.remove('hover');
+});
+
+/* ---- HERO PARALLAX (subtle, mouse-driven) ---- */
+const heroEl = document.getElementById('hero');
+heroEl.addEventListener('mousemove', e => {
+  const px = (e.clientX / innerWidth - 0.5);
+  const py = (e.clientY / innerHeight - 0.5);
+  heroBg.style.transform = `translate(${px * -14}px, ${py * -10}px)`;
+});
+heroEl.addEventListener('mouseleave', () => { heroBg.style.transform = 'translate(0,0)'; });
+heroBg.style.transition = 'transform .6s var(--ease)';
+
+/* ---- SCROLL REVEAL ---- */
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting){
+      entry.target.classList.add('in-view');
+      revealObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.18 });
+document.querySelectorAll('[data-reveal]').forEach(el => revealObserver.observe(el));
+
+/* ---- MAGNETIC BUTTONS ---- */
+document.querySelectorAll('.hero-info button').forEach(btn => {
+  btn.addEventListener('mousemove', e => {
+    const r = btn.getBoundingClientRect();
+    const mx = e.clientX - r.left - r.width/2;
+    const my = e.clientY - r.top - r.height/2;
+    btn.style.transform = `translate(${mx*0.25}px, ${my*0.4}px)`;
+  });
+  btn.addEventListener('mouseleave', () => { btn.style.transform = 'translate(0,0)'; });
+});
+
+/* ---- SCENT QUIZ ---- */
+const quizQuestions = [
+  { q:"How do you like to start something new?", options:[
+    {t:"With a hypothesis, not a plan", v:"Experimental"},
+    {t:"With an idea I haven't fully formed yet", v:"Conceptual"},
+    {t:"By testing the temperature of the room first", v:"Celsius"},
+    {t:"By jumping straight into the heat of it", v:"Fahrenheit"},
+  ]},
+  { q:"Pick a texture that feels most like you.", options:[
+    {t:"Cold iron", v:"Experimental"},
+    {t:"Chalk dust", v:"Conceptual"},
+    {t:"Polished steel", v:"Kelvin"},
+    {t:"Damp moss", v:"Reaumur"},
+  ]},
+  { q:"Choose a state of mind.", options:[
+    {t:"Mid-trial, nothing resolved yet", v:"Experimental"},
+    {t:"Perfectly still, perfectly quiet", v:"Kelvin"},
+    {t:"Slightly out of step with everyone else", v:"Reaumur"},
+    {t:"An outline that resists finishing", v:"Conceptual"},
+  ]},
+  { q:"What's your ideal pace?", options:[
+    {t:"Iterative — trial, error, trial again", v:"Experimental"},
+    {t:"Slow and theatrical", v:"Fahrenheit"},
+    {t:"Measured and precise", v:"Celsius"},
+    {t:"Patient, unbothered by trends", v:"Reaumur"},
+  ]},
+  { q:"If you had to disappear into a scent, you'd want to feel—", options:[
+    {t:"Unresolved", v:"Experimental"},
+    {t:"Weightless", v:"Kelvin"},
+    {t:"Grounded", v:"Reaumur"},
+    {t:"Warm", v:"Fahrenheit"},
+    {t:"Clear", v:"Celsius"},
+    {t:"Abstract", v:"Conceptual"},
+  ]},
+];
+
+let quizAnswers = [];
+let quizStep = 0;
+
+function openQuiz(){
+  quizAnswers = [];
+  quizStep = 0;
+  document.getElementById('quizModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  renderQuizStep();
+}
+function closeQuiz(){
+  document.getElementById('quizModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function renderQuizStep(){
+  const body = document.getElementById('quizBody');
+  const total = quizQuestions.length;
+
+  if (quizStep < total){
+    const q = quizQuestions[quizStep];
+    const dots = quizQuestions.map((_, i) => `<span class="${i < quizStep ? 'done' : ''}"></span>`).join('');
+    body.innerHTML = `
+      <div class="quiz-progress">${dots}</div>
+      <div class="quiz-qnum">Question ${quizStep + 1} of ${total}</div>
+      <div class="quiz-question">${q.q}</div>
+      <div class="quiz-options">
+        ${q.options.map((o, i) => `<button class="quiz-opt" data-v="${o.v}">${o.t}</button>`).join('')}
+      </div>
+    `;
+    body.querySelectorAll('.quiz-opt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        quizAnswers.push(btn.dataset.v);
+        quizStep++;
+        renderQuizStep();
+      });
+    });
+  } else {
+    renderQuizResult();
+  }
+}
+
+function renderQuizResult(){
+  const tally = {};
+  quizAnswers.forEach(v => { tally[v] = (tally[v] || 0) + 1; });
+  let winner = compositions[0].name;
+  let best = -1;
+  compositions.forEach(c => {
+    const score = tally[c.name] || 0;
+    if (score > best){ best = score; winner = c.name; }
+  });
+  const c = compositions.find(x => x.name === winner);
+  const body = document.getElementById('quizBody');
+  const visual = c.photo ? `<img src="${c.photo}" alt="${c.name}">` : ambientDiv(c);
+  body.innerHTML = `
+    <div class="quiz-result">
+      <div class="qr-label">Your match, Specimen No. ${c.n}</div>
+      <div class="qr-visual">${visual}</div>
+      <h3>${c.name}</h3>
+      <div class="qr-line">${c.line}</div>
+      <div class="quiz-actions">
+        <button class="qa-primary" onclick="closeQuiz(); openOverlay(compositions.find(x=>x.name==='${c.name}'));">View this composition</button>
+        <button class="qa-share" id="shareBtn">Share to Instagram Story</button>
+        <div class="quiz-share-note" id="shareNote"></div>
+        <button class="qa-retake" onclick="openQuiz()">Retake the quiz</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('shareBtn').addEventListener('click', () => shareStory(c));
+}
+
+/* ---- STORY IMAGE GENERATION + SHARE ---- */
+async function shareStory(c){
+  const noteEl = document.getElementById('shareNote');
+  noteEl.textContent = 'Preparing your story…';
+
+  document.getElementById('scMedia').innerHTML = c.photo
+    ? `<img src="${c.photo}" alt="${c.name}">`
+    : ambientDiv(c);
+  document.getElementById('scBadge').textContent = 'No. ' + c.n;
+  document.getElementById('scName').textContent = c.name;
+  document.getElementById('scLine').textContent = c.line;
+  document.getElementById('scNotes').innerHTML = c.notes.map(n => `<span>${n}</span>`).join('');
+
+  try{
+    const canvas = await html2canvas(document.getElementById('storyCard'), { useCORS:true, backgroundColor:null, width:1080, height:1920 });
+    canvas.toBlob(async (blob) => {
+      const file = new File([blob], `duftlab-${c.name.toLowerCase()}.png`, { type:'image/png' });
+      if (navigator.canShare && navigator.canShare({ files:[file] })){
+        try{
+          await navigator.share({ files:[file], title:`My Duftlab match: ${c.name}` });
+          noteEl.textContent = 'Shared — pick Instagram to post to your Story.';
+          return;
+        } catch(err){ /* user cancelled or unsupported — fall through to download */ }
+      }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `duftlab-${c.name.toLowerCase()}.png`;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+      noteEl.textContent = 'Image saved — open Instagram and share it to your Story.';
+    }, 'image/png');
+  } catch(err){
+    noteEl.textContent = "Couldn't generate the image. Please try again.";
+  }
+}
+</script>
+
+</body>
+</html>
