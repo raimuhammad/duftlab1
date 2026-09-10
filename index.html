@@ -1,0 +1,2045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DUFTLAB</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper: #F6F3EC;
+    --paper-dim: #EDE8DC;
+    --ink: #1C1B18;
+    --line: #D8D2C4;
+    --muted: #8C8573;
+    --oxide: #E8402C;
+    --display: 'Space Grotesk', sans-serif;
+    --mono: 'Space Mono', monospace;
+    --sans: 'Inter', sans-serif;
+    --ease: cubic-bezier(.16,1,.3,1);
+    --ease-soft: cubic-bezier(.22,.61,.36,1);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background-color:var(--paper);
+    background-image:
+      linear-gradient(rgba(28,27,24,.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(28,27,24,.045) 1px, transparent 1px);
+    background-size:56px 56px;
+    color:var(--ink);
+    font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+    cursor:none;
+  }
+  a{color:inherit;}
+
+  /* ---------- CUSTOM CURSOR ---------- */
+  .cursor-dot, .cursor-ring{
+    position:fixed; top:0; left:0; z-index:200;
+    pointer-events:none;
+    transform:translate(-50%,-50%);
+  }
+  .cursor-dot{
+    width:4px; height:4px; border-radius:50%; background:var(--oxide);
+    transition:opacity .2s ease;
+  }
+  .cursor-ring{
+    width:26px; height:26px; border:1px solid rgba(255,255,255,.85);
+    mix-blend-mode:difference;
+    transition:width .28s var(--ease), height .28s var(--ease), transform .28s var(--ease);
+  }
+  .cursor-ring::before, .cursor-ring::after{
+    content:''; position:absolute; background:rgba(255,255,255,.85);
+  }
+  .cursor-ring::before{ top:50%; left:-7px; width:5px; height:1px; transform:translateY(-50%); }
+  .cursor-ring::after{ left:50%; top:-7px; height:5px; width:1px; transform:translateX(-50%); }
+  .cursor-ring.hover{
+    width:48px; height:48px;
+    transform:translate(-50%,-50%) rotate(45deg);
+  }
+  @media (hover:none), (pointer:coarse){
+    .cursor-dot, .cursor-ring{display:none;}
+    body{cursor:auto;}
+  }
+
+  /* ---------- TECHNICAL / INDEX LABELS (monospace) ---------- */
+  .section-label .num, .hero-nav .links, .hero-list .item .tag, .scale-point .sp-val, .scale-point .sp-name,
+  .product-stock, .product-meta, .overlay-tag,
+  .notes-row .k, .notes-row .v, .quiz-qnum, .qr-label,
+  .sc-badge, .sc-label, .qt-eyebrow, .scroll-cue, .lab-meta, .tile .tag, .foot-bottom,
+  .pnh-label{
+    font-family:var(--mono);
+  }
+  .section-label .num::before{content:'[';}
+  .section-label .num::after{content:']';}
+
+  /* ---------- GRAIN OVERLAY ---------- */
+  .grain{
+    position:fixed; inset:0; z-index:150; pointer-events:none;
+    opacity:.035; mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* ---------- SCROLL REVEAL ---------- */
+  [data-reveal]{
+    opacity:0; transform:translateY(28px);
+    transition:opacity .9s var(--ease), transform .9s var(--ease);
+  }
+  [data-reveal].in-view{opacity:1; transform:translateY(0);}
+
+  /* ---------- HERO (A24-style: full-bleed photo + title list) ---------- */
+  @keyframes riseIn{ to{opacity:1; transform:translateY(0);} }
+
+  .hero{
+    position:relative;
+    height:100vh; min-height:640px;
+    overflow:hidden;
+    color:#F3F0E8;
+    background:#0B0B09;
+  }
+  .hero-bg{position:absolute; inset:-3%; --paper-dim:#17140f;}
+  #voidCanvas{position:absolute; inset:0; width:100%; height:100%; display:block;}
+  .hero-bg .layer{
+    position:absolute; inset:0;
+    opacity:0;
+    background-color:var(--layer-color, var(--paper-dim));
+    background-image:var(--layer-image, none);
+    background-size:cover;
+    background-position:center;
+    transform:scale(1.04);
+    transition:opacity 1.3s var(--ease), transform 7s linear;
+  }
+  .hero-bg .layer.active{opacity:1; transform:scale(1.1);}
+  .hero-scrim{
+    position:absolute; inset:0;
+    background:
+      linear-gradient(90deg, rgba(11,11,9,.8) 0%, rgba(11,11,9,.3) 42%, rgba(11,11,9,0) 68%),
+      linear-gradient(0deg, rgba(11,11,9,.42), transparent 30%);
+    pointer-events:none;
+  }
+
+  .hero-nav{
+    position:absolute; top:0; left:0; right:0; z-index:6;
+    display:flex; justify-content:space-between; align-items:center;
+    padding:28px 5vw;
+    font-size:13px;
+  }
+  .hero-nav .word img{height:20px; display:block; filter:brightness(0) invert(1);}
+  .hero-nav .links{display:flex; align-items:center; gap:24px; color:#F3F0E8;}
+  .hero-nav .links-item{display:flex; align-items:center; gap:8px; cursor:none;}
+  .hero-nav .links .rec{
+    width:6px; height:6px; border-radius:50%; background:var(--oxide);
+    animation:pulse 2.2s ease-in-out infinite;
+  }
+  @keyframes pulse{ 0%,100%{opacity:.35;} 50%{opacity:1;} }
+
+  .hero-stack{
+    position:absolute; left:5vw; top:50%; transform:translateY(-50%);
+    z-index:5;
+    display:flex; flex-direction:column; gap:34px;
+    max-width:90vw;
+  }
+  .hero-list{
+    display:flex; flex-direction:column; gap:2px;
+  }
+  .hero-list .item{
+    display:flex; align-items:baseline; gap:16px;
+    cursor:none;
+  }
+  .hero-list .item .t{
+    font-family:var(--display); font-weight:700;
+    font-size:clamp(26px, 4.6vw, 56px);
+    line-height:1.08;
+    letter-spacing:-0.01em;
+    color:#F3F0E8;
+    transition:opacity .5s var(--ease), font-weight .5s var(--ease), letter-spacing .5s var(--ease), color .5s var(--ease);
+    opacity:0; animation:riseIn .7s var(--ease) forwards;
+  }
+  .hero-list .item.active .t{opacity:.3; font-weight:300;}
+  .hero-list .item:not(.active):hover .t{letter-spacing:0.006em; color:var(--item-accent, var(--oxide));}
+  .hero-list .item .tag{
+    font-size:12px; color:var(--muted);
+    font-variant-numeric:tabular-nums;
+    opacity:0; animation:riseIn .7s ease forwards;
+  }
+
+  .hero-info{max-width:420px;}
+  .hero-info .line{
+    font-family:var(--mono); font-style:normal; text-transform:uppercase; letter-spacing:.09em; font-size:11px;
+    color:var(--oxide);
+    opacity:0; transform:translateY(6px);
+    transition:opacity .4s var(--ease), transform .4s var(--ease);
+  }
+  .hero-info .line.show{opacity:1; transform:translateY(0);}
+  .hero-info button{
+    position:relative;
+    margin-top:14px; font-size:12px; color:#F3F0E8; background:none; border:none;
+    border-bottom:1px solid rgba(243,240,232,.5); padding-bottom:2px; cursor:none;
+    font-family:var(--sans);
+    opacity:0; transform:translateY(6px);
+    transition:opacity .4s ease .05s, transform .12s var(--ease);
+  }
+  .hero-info button.show{opacity:1; transform:translateY(0);}
+
+  .scroll-cue{
+    position:absolute; bottom:40px; right:5vw; z-index:5;
+    font-size:12px; color:rgba(243,240,232,.55);
+    display:flex; align-items:center; gap:10px;
+    opacity:0; animation:riseIn .8s ease forwards 1.6s;
+  }
+
+  /* ---------- HERO: LIGHT VARIANT (toggle, for comparison) ---------- */
+  body[data-hero-bg="light"] .hero{ background:#F6F3EC; }
+  body[data-hero-bg="light"] .hero-scrim{
+    background:
+      linear-gradient(90deg, rgba(246,243,236,.86) 0%, rgba(246,243,236,.44) 40%, rgba(246,243,236,.06) 66%),
+      linear-gradient(0deg, rgba(246,243,236,.5), transparent 30%);
+  }
+  body[data-hero-bg="light"] .hero-nav .links{ color:#1C1B18; }
+  body[data-hero-bg="light"] .hero-nav .word img{ filter:none; }
+  body[data-hero-bg="light"] .hero-list .item .t{ color:#1C1B18; }
+  body[data-hero-bg="light"] .hero-info button{ color:#1C1B18; border-bottom-color:rgba(28,27,24,.5); }
+  body[data-hero-bg="light"] .scroll-cue{ color:rgba(28,27,24,.55); }
+  .scroll-cue .arrow{
+    display:inline-block;
+    animation:bob 2s ease-in-out infinite;
+  }
+  @keyframes bob{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(5px);} }
+
+  /* ---------- AMBIENT PLACEHOLDER (no photo yet) ---------- */
+  .ambient{
+    position:absolute; inset:0;
+  }
+  .ambient::before{
+    content:'';
+    position:absolute; top:0; left:0; right:0; height:3px;
+    background:var(--amb-accent);
+  }
+
+  /* ---------- RIBBON FIELD (canvas2d, predictive-arc style, per-variant color) ---------- */
+  .ribbon-wrap{
+    position:absolute; inset:0;
+    background:#0A0A08;
+  }
+  .ribbon-wrap::before{
+    content:''; position:absolute; top:0; left:0; right:0; height:1px; background:var(--amb-accent); opacity:.7; z-index:1;
+  }
+  .ribbon-canvas{position:absolute; inset:0; width:100%; height:100%; display:block;}
+
+  /* ---------- SPEC-SHEET INDEX ROW (technical catalog labels) ---------- */
+  .spec-row{
+    display:flex; flex-direction:column; gap:4px;
+    margin-top:14px; padding-top:14px; border-top:1px dashed var(--line);
+    font-family:var(--mono); font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.03em;
+  }
+  .spec-row div{display:flex; justify-content:space-between; gap:10px;}
+  .spec-row div b{color:var(--ink); font-weight:400;}
+  .spec-row .status-active{color:var(--oxide);}
+
+  /* ---------- SHOP / CATALOG (spec-table grid) ---------- */
+  .shop{padding:120px 0;}
+  .shop-caption{
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px;
+    padding:0 5vw 10px;
+  }
+  .shop-caption div{
+    font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.12em;
+    color:var(--muted);
+  }
+  /* Grid lines come from the 1px gap showing the container background, so they
+     stay correct at any column count instead of breaking on nth-child rules. */
+  .shop-wrap{padding:0 5vw;}
+  .shop-grid{
+    display:grid; grid-template-columns:repeat(3, 1fr); gap:1px;
+    background:var(--line);
+    border:1px solid var(--line);
+  }
+  .product-card{
+    background:var(--paper);
+    display:flex; flex-direction:column;
+    position:relative; min-width:0;
+  }
+  .product-media{
+    aspect-ratio:3/4; position:relative; overflow:hidden; background:#DBDBDB;
+  }
+  .product-media img{
+    position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+    transition:transform 1.2s var(--ease), filter .5s var(--ease);
+  }
+  .product-card:hover .product-media img{transform:scale(1.03);}
+  .product-index{
+    position:absolute; top:0; left:0; z-index:2;
+    font-family:var(--mono); font-size:10px; letter-spacing:.08em;
+    padding:8px 10px; color:var(--ink); background:var(--paper);
+    border-right:1px solid var(--line); border-bottom:1px solid var(--line);
+  }
+  .product-stock{
+    position:absolute; top:8px; right:10px; z-index:2;
+    font-family:var(--mono); font-size:9px; text-transform:uppercase; letter-spacing:.08em;
+    padding:4px 8px; background:rgba(246,243,236,.9);
+    color:var(--muted); border:1px solid var(--line);
+  }
+  .product-stock.limited{color:var(--oxide); border-color:var(--oxide);}
+  .product-notes-hover{
+    position:absolute; inset:0; z-index:2;
+    display:flex; flex-direction:column; justify-content:flex-end;
+    padding:16px;
+    background:linear-gradient(to top, rgba(12,14,14,.82), transparent 55%);
+    opacity:0; transition:opacity .4s var(--ease);
+    pointer-events:none;
+  }
+  .product-media:hover .product-notes-hover{opacity:1;}
+  .product-notes-hover .pnh-label{
+    font-family:var(--mono); font-size:9px; text-transform:uppercase; letter-spacing:.1em;
+    color:rgba(246,243,236,.55); margin-bottom:8px;
+  }
+  .product-notes-hover .pnh-notes{display:flex; flex-direction:column; gap:2px;}
+  .product-notes-hover .pnh-notes span{font-size:12px; color:#fff;}
+
+  .product-body{padding:16px 14px 14px; display:flex; flex-direction:column; flex:1;}
+  .product-body .pn{
+    display:flex; justify-content:space-between; align-items:baseline; gap:10px;
+  }
+  .product-body h4{font-family:var(--display); font-weight:600; font-size:16px; letter-spacing:-0.01em; cursor:none;}
+  .product-body .price{font-family:var(--mono); font-size:11px; color:var(--ink); white-space:nowrap;}
+  .product-body .pl{
+    font-family:var(--mono); text-transform:uppercase; letter-spacing:.04em; font-size:9px;
+    color:var(--muted); margin-top:7px; line-height:1.65; min-height:3em;
+  }
+  .spec-row{
+    display:flex; flex-direction:column; gap:4px;
+    margin-top:12px; padding-top:10px; border-top:1px solid var(--line);
+    font-family:var(--mono); font-size:9px; color:var(--muted);
+    text-transform:uppercase; letter-spacing:.04em;
+  }
+  .spec-row div span:first-child{white-space:nowrap;}
+  .spec-row div b{text-align:right; word-break:break-word;}
+  .spec-row div{display:flex; justify-content:space-between; gap:10px;}
+  .spec-row div b{color:var(--ink); font-weight:400;}
+  .spec-row .status-active{color:var(--oxide);}
+  .product-add{
+    margin-top:14px;
+    width:100%; padding:10px 0; background:none;
+    border:1px solid var(--ink); color:var(--ink);
+    font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.1em; cursor:none;
+    transition:background .3s var(--ease), color .3s var(--ease);
+  }
+  .product-add:hover{background:var(--ink); color:var(--paper);}
+  .product-add.added{background:var(--oxide); border-color:var(--oxide); color:var(--paper);}
+
+  /* ---------- LAYERING (The Formula) ---------- */  .layering{padding:120px 0; background:#0B0B09; color:#F3F0E8;}
+  .layer-intro{padding:0 5vw; max-width:520px; margin-bottom:48px;}
+  .layer-intro p{font-size:16px; line-height:1.7; color:rgba(243,240,232,.65);}
+  .layering .section-label h2{color:#F3F0E8;}
+  .layering .section-label .num{color:rgba(243,240,232,.5);}
+  .layering .section-label .rule{background:rgba(243,240,232,.18);}
+  .layering .section-label .rule::after{background:#F3F0E8;}
+
+  .layer-chips{
+    display:flex; flex-wrap:wrap; gap:10px;
+    padding:0 5vw; margin-bottom:56px;
+  }
+  .layer-chip{
+    font-family:var(--mono); font-size:12px; text-transform:uppercase; letter-spacing:.04em; color:#F3F0E8;
+    background:rgba(243,240,232,.05); border:1px solid rgba(243,240,232,.18); padding:12px 20px;
+    display:flex; align-items:center; gap:10px;
+    cursor:none; transition:border-color .3s var(--ease), background .3s var(--ease);
+  }
+  .layer-chip .dot{width:7px; height:7px; border-radius:50%; background:var(--chip-accent, var(--oxide)); flex-shrink:0;}
+  .layer-chip:hover{border-color:rgba(243,240,232,.4);}
+  .layer-chip.selected{border-color:var(--chip-accent, var(--oxide)); background:rgba(243,240,232,.1); color:#fff;}
+
+  .layer-result{padding:0 5vw; min-height:280px;}
+  .layer-empty{
+    font-family:var(--mono); font-style:normal; text-transform:uppercase; letter-spacing:.06em; font-size:12px; color:rgba(243,240,232,.4);
+    transition:opacity .4s ease;
+  }
+
+  .layer-panel{
+    opacity:0; transform:translateY(16px);
+    transition:opacity .6s var(--ease), transform .6s var(--ease);
+  }
+  .layer-panel.show{opacity:1; transform:translateY(0);}
+
+  .layer-wave-box{
+    position:relative; height:130px; border:1px solid rgba(243,240,232,.1);
+    margin-bottom:10px; overflow:hidden;
+  }
+  .layer-wave-box canvas{position:absolute; inset:0; width:100%; height:100%; display:block;}
+  .layer-wave-legend{
+    display:flex; gap:24px; margin-bottom:40px; font-family:var(--mono); font-size:11px;
+    text-transform:uppercase; letter-spacing:.05em; color:rgba(243,240,232,.55);
+  }
+  .layer-wave-legend span{display:flex; align-items:center; gap:8px;}
+  .layer-wave-legend .ln{width:14px; height:2px; display:inline-block;}
+
+  .layer-equation{
+    display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+    font-family:var(--mono); font-size:12px; text-transform:uppercase; letter-spacing:.06em;
+    color:rgba(243,240,232,.55); margin:34px 0 20px;
+  }
+  .layer-equation .eq-op{color:rgba(243,240,232,.3);}
+  .layer-equation .eq-name{color:#F3F0E8;}
+
+  .layer-story{max-width:620px; border-top:1px solid rgba(243,240,232,.15); padding-top:26px;}
+  .layer-story .ls-index{
+    font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.1em;
+    color:rgba(243,240,232,.4); margin-bottom:12px;
+  }
+  .layer-story h4{
+    font-family:var(--display); font-weight:700; font-size:clamp(28px,4vw,42px);
+    letter-spacing:-0.01em; margin-bottom:16px; color:#F3F0E8;
+  }
+  .layer-story p{font-size:15px; line-height:1.8; color:rgba(243,240,232,.62);}
+
+  .layer-reset{
+    margin-top:22px; font-size:12px; color:rgba(243,240,232,.5); background:none; border:none;
+    border-bottom:1px solid rgba(243,240,232,.25); cursor:none; font-family:var(--sans);
+  }
+
+  /* ---------- QUIZ TEASER ---------- */
+  .quiz-teaser{padding:0; }
+  .quiz-teaser-inner{
+    margin:0 5vw; padding:56px 48px;
+    background:var(--ink); color:var(--paper);
+    display:flex; justify-content:space-between; align-items:center; gap:40px;
+    flex-wrap:wrap;
+  }
+  .qt-eyebrow{font-size:12px; color:rgba(246,243,236,.55); margin-bottom:10px;}
+  .quiz-teaser-inner h3{font-family:var(--display); font-weight:400; font-size:clamp(24px,3vw,34px); margin-bottom:10px;}
+  .quiz-teaser-inner p{font-size:14px; color:rgba(246,243,236,.7); max-width:420px; line-height:1.6;}
+  .qt-btn{
+    padding:16px 32px; background:var(--paper); color:var(--ink); border:none;
+    font-family:var(--sans); font-size:13px; cursor:none; white-space:nowrap;
+    transition:background .35s var(--ease), color .35s var(--ease);
+  }
+  .qt-btn:hover{background:var(--oxide); color:var(--paper);}
+
+  /* ---------- SCENT QUIZ: full-screen "Wrapped"-style story ---------- */
+  .quiz-modal{
+    position:fixed; inset:0; z-index:120;
+    display:flex; align-items:center; justify-content:center;
+    pointer-events:none;
+  }
+  .quiz-modal .scrim{position:absolute; inset:0; background:rgba(6,6,5,0); transition:background .5s ease;}
+  .quiz-modal.open .scrim{background:rgba(6,6,5,.92);}
+  .quiz-modal.open{pointer-events:auto;}
+  .quiz-card{
+    position:relative; width:min(480px, 94vw); height:min(820px, 92vh); overflow:hidden;
+    background:#0B0B09; color:#F3F0E8; padding:0;
+    opacity:0; transform:scale(.96);
+    transition:opacity .4s var(--ease), transform .4s var(--ease);
+    display:flex; flex-direction:column;
+    box-shadow:0 40px 120px rgba(0,0,0,.5);
+  }
+  .quiz-modal.open .quiz-card{opacity:1; transform:scale(1);}
+  .quiz-glow{
+    position:absolute; inset:0; z-index:0; opacity:.55;
+    background:radial-gradient(60% 50% at 50% 0%, var(--q-accent, #E8402C), transparent 70%);
+    transition:background 1.1s var(--ease);
+    pointer-events:none;
+  }
+  .quiz-close{
+    position:absolute; top:20px; right:20px; z-index:5; background:none; border:none;
+    font-size:13px; color:rgba(243,240,232,.6); cursor:none; font-family:var(--mono);
+  }
+  .quiz-body-inner{
+    position:relative; z-index:2; flex:1; display:flex; flex-direction:column;
+    padding:56px 30px 34px; overflow-y:auto; overscroll-behavior:contain;
+    transition:opacity .18s ease;
+  }
+  .quiz-body-inner.swapping{opacity:0;}
+
+  .quiz-progress{display:flex; gap:5px; margin-bottom:38px;}
+  .quiz-progress span{height:2px; flex:1; background:rgba(243,240,232,.2); position:relative; overflow:hidden;}
+  .quiz-progress span::after{
+    content:''; position:absolute; inset:0; background:#F3F0E8;
+    transform:scaleX(0); transform-origin:left; transition:transform .4s var(--ease);
+  }
+  .quiz-progress span.done::after{transform:scaleX(1);}
+  .quiz-progress span.current::after{transform:scaleX(1); background:var(--oxide);}
+
+  .quiz-qnum{font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.1em; color:rgba(243,240,232,.5); margin-bottom:18px;}
+  .quiz-question{
+    font-family:var(--display); font-weight:600; font-size:clamp(26px,5.5vw,36px); line-height:1.18;
+    margin-bottom:36px;
+    opacity:0; transform:translateY(14px);
+    animation:qFadeUp .55s var(--ease) forwards;
+  }
+  @keyframes qFadeUp{ to{opacity:1; transform:translateY(0);} }
+
+  .quiz-options{display:flex; flex-direction:column; gap:10px;}
+  .quiz-opt{
+    text-align:left; padding:18px 20px; background:rgba(243,240,232,.05);
+    border:1px solid rgba(243,240,232,.12); border-left:3px solid var(--opt-accent, transparent);
+    font-family:var(--sans); font-size:15px; color:#F3F0E8; cursor:none;
+    transition:background .25s ease, border-color .25s ease, transform .15s ease;
+    opacity:0; transform:translateY(10px);
+    animation:qFadeUp .5s var(--ease) forwards;
+  }
+  .quiz-opt:hover{background:rgba(243,240,232,.12); transform:translateX(4px);}
+  .quiz-opt:disabled{opacity:.35;}
+  .quiz-opt.picked:disabled{opacity:1;}
+  .quiz-opt.picked{background:var(--opt-accent, var(--oxide)); border-color:var(--opt-accent, var(--oxide)); color:#0B0B09; font-weight:600;}
+
+  .quiz-loading{
+    flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px;
+    font-family:var(--mono); text-transform:uppercase; letter-spacing:.12em; font-size:12px; color:rgba(243,240,232,.7);
+  }
+  .quiz-loading .ql-bar{width:180px; height:2px; background:rgba(243,240,232,.15); position:relative; overflow:hidden;}
+  .quiz-loading .ql-bar::after{
+    content:''; position:absolute; top:0; bottom:0; left:-40%; width:40%;
+    background:var(--oxide); animation:qlSweep 1.1s ease-in-out infinite;
+  }
+  @keyframes qlSweep{ 0%{left:-40%;} 100%{left:100%;} }
+
+  .quiz-result{
+    flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;
+    gap:6px;
+  }
+  .quiz-result .qr-label{
+    font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.12em; color:rgba(243,240,232,.55);
+    opacity:0; animation:qFadeUp .5s var(--ease) forwards;
+  }
+  .quiz-result .qr-visual{
+    width:min(220px, 60vw); height:min(220px,60vw); margin:18px 0 20px; position:relative; overflow:hidden; border-radius:50%;
+    border:1px solid rgba(243,240,232,.25);
+    opacity:0; transform:scale(.7); animation:qrPop .6s var(--ease) .15s forwards;
+  }
+  @keyframes qrPop{ to{opacity:1; transform:scale(1);} }
+  .quiz-result .qr-visual img{width:100%; height:100%; object-fit:cover;}
+  .quiz-result h3{
+    font-family:var(--display); font-weight:700; font-size:clamp(38px,9vw,54px); margin-bottom:10px; letter-spacing:-0.01em;
+    opacity:0; transform:translateY(10px); animation:qFadeUp .5s var(--ease) .3s forwards;
+  }
+  .quiz-result .qr-line{
+    font-family:var(--mono); font-style:normal; text-transform:uppercase; letter-spacing:.06em; color:var(--q-accent-solid, var(--oxide)); font-size:12px; margin-bottom:30px;
+    opacity:0; animation:qFadeUp .5s var(--ease) .42s forwards;
+  }
+  .quiz-actions{display:flex; flex-direction:column; gap:10px; align-items:center; width:100%; max-width:320px;
+    opacity:0; animation:qFadeUp .5s var(--ease) .54s forwards;
+  }
+  .quiz-actions button{
+    width:100%; padding:16px 0; font-family:var(--sans); font-size:13px; cursor:none;
+    transition:background .3s var(--ease), color .3s var(--ease), transform .15s ease;
+  }
+  .quiz-actions button:active{transform:scale(.98);}
+  .qa-share{
+    background:var(--q-accent-solid, var(--oxide)); color:#0B0B09; border:none; font-weight:700;
+    display:flex; align-items:center; justify-content:center; gap:8px; letter-spacing:.02em;
+  }
+  .qa-share:hover{filter:brightness(1.12);}
+  .qa-primary{background:none; border:1px solid rgba(243,240,232,.3); color:#F3F0E8;}
+  .qa-primary:hover{border-color:#F3F0E8;}
+  .qa-retake{background:none; border:none; color:rgba(243,240,232,.5); text-decoration:underline; padding:6px 0;}
+  .quiz-share-note{font-size:11px; color:rgba(243,240,232,.55); margin-top:6px; font-family:var(--mono);}
+
+  /* ---------- STORY CARD (off-screen, rendered to image) ---------- */
+  .story-card{
+    position:fixed; left:-9999px; top:0;
+    width:1080px; height:1920px;
+    background:var(--paper);
+    display:flex; flex-direction:column; justify-content:space-between;
+    padding:90px 80px;
+    font-family:var(--sans);
+  }
+  .story-card .sc-media{position:absolute; inset:0; overflow:hidden;}
+  .story-card .sc-media img{width:100%; height:100%; object-fit:cover;}
+  .story-card .sc-scrim{position:absolute; inset:0; background:linear-gradient(180deg, rgba(246,243,236,.15), rgba(246,243,236,.92) 60%);}
+  .story-card .sc-top{position:relative; z-index:2; display:flex; justify-content:space-between; align-items:center;}
+  .story-card .sc-top img{height:44px;}
+  .story-card .sc-badge{font-size:26px; color:var(--muted); letter-spacing:.02em;}
+  .story-card .sc-bottom{position:relative; z-index:2;}
+  .story-card .sc-label{font-size:26px; color:var(--muted); margin-bottom:20px;}
+  .story-card .sc-name{font-family:var(--display); font-weight:500; font-size:110px; line-height:1.02; color:var(--ink); margin-bottom:26px;}
+  .story-card .sc-line{font-family:var(--mono); font-style:normal; text-transform:uppercase; letter-spacing:.04em; font-size:26px; color:var(--oxide); margin-bottom:44px;}
+  .story-card .sc-notes{display:flex; gap:16px; flex-wrap:wrap;}
+  .story-card .sc-notes span{font-size:22px; padding:14px 24px; border:2px solid var(--line); color:var(--muted);}
+
+  /* ---------- SECTION LABEL ---------- */
+  .section-label{
+    display:flex; align-items:baseline; gap:14px;
+    padding:0 5vw; margin-bottom:40px;
+  }
+  .section-label .num{
+    font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;
+  }
+  .section-label h2{
+    font-family:var(--display); font-weight:400; font-size:28px;
+  }
+  .section-label .rule{flex:1; height:1px; background:var(--line); position:relative; overflow:hidden;}
+  .section-label .rule::after{
+    content:''; position:absolute; inset:0; background:var(--ink);
+    transform:scaleX(0); transform-origin:left;
+    transition:transform 1.2s var(--ease) .15s;
+  }
+  .section-label.in-view .rule::after{transform:scaleX(1);}
+
+  section{padding:120px 0;}
+
+  /* ---------- GRID ---------- */
+  .grid-wrap{padding:0 5vw;}
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    grid-auto-rows:220px;
+    gap:2px;
+  }
+  .tile{
+    position:relative;
+    grid-column:span 1; grid-row:span 1;
+    background:var(--ink);
+    overflow:hidden;
+    cursor:none;
+  }
+  .tile.big{grid-column:span 2; grid-row:span 2;}
+  .tile.wide{grid-column:span 2; grid-row:span 1;}
+  .tile .swatch{
+    position:absolute; inset:0;
+    background:
+      radial-gradient(120% 140% at 20% 15%, rgba(255,255,255,.10), transparent 55%),
+      var(--tile-color);
+    transition:transform 1.1s cubic-bezier(.2,.7,.2,1);
+  }
+  .tile:hover .swatch{transform:scale(1.06);}
+  .tile .overlay{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; justify-content:flex-end;
+    padding:22px;
+    background:linear-gradient(to top, rgba(0,0,0,.55), transparent 55%);
+    color:#fff;
+  }
+  .tile .tag{
+    font-size:11px; color:rgba(255,255,255,.6);
+    font-variant-numeric:tabular-nums;
+    margin-bottom:6px;
+    opacity:0; transform:translateY(6px);
+    transition:opacity .4s ease, transform .4s ease;
+  }
+  .tile .name{
+    font-family:var(--display); font-weight:400;
+    font-size:clamp(20px, 2.4vw, 34px);
+  }
+  .tile .notes{
+    font-size:12px; color:rgba(255,255,255,.65);
+    margin-top:8px; max-width:80%;
+    opacity:0; transform:translateY(6px);
+    transition:opacity .4s ease .05s, transform .4s ease .05s;
+  }
+  .tile:hover .tag, .tile:hover .notes{opacity:1; transform:translateY(0);}
+
+  /* ---------- LAB / PHILOSOPHY ---------- */
+  .lab{
+    padding:140px 5vw;
+    display:flex; justify-content:center;
+  }
+  .lab-content{max-width:720px;}
+  .lab-content p{
+    font-family:var(--display);
+    font-weight:400;
+    font-size:clamp(24px, 3.4vw, 40px);
+    line-height:1.35;
+  }
+  .lab-content p em{font-style:normal; color:var(--oxide);}
+  .lab-meta{
+    display:flex; gap:60px; margin-top:56px;
+    font-size:13px; color:var(--muted);
+  }
+  .lab-meta div span{display:block; color:var(--ink); font-size:15px; margin-top:4px;}
+
+  /* ---------- READING THE SCALE ---------- */
+  .scale-strip{padding:0 5vw 100px;}
+  .scale-strip .ss-intro{
+    font-size:14px; color:var(--muted); max-width:420px; margin-bottom:44px;
+  }
+  .scale-row{
+    display:flex; align-items:flex-end; gap:0;
+    border-top:1px solid var(--line);
+  }
+  .scale-point{
+    flex:1; padding-top:18px; position:relative;
+  }
+  .scale-point::before{
+    content:''; position:absolute; top:-1px; left:0; width:1px; height:10px; background:var(--ink);
+  }
+  .scale-point .sp-val{font-family:var(--display); font-size:clamp(22px,3vw,32px); margin-bottom:6px;}
+  .scale-point .sp-name{font-size:12px; color:var(--muted);}
+
+  /* ---------- FEATURED DETAIL ---------- */
+  .featured{
+    padding:0 5vw;
+    display:grid; grid-template-columns:minmax(0,260px) minmax(0,1fr); gap:56px; align-items:start;
+  }
+  .featured-media{display:flex; flex-direction:column;}
+  .featured .visual{
+    aspect-ratio:3/4; width:100%;
+    position:relative;
+    overflow:hidden;
+    border:1px solid var(--line);
+    background:#DBDBDB;
+  }
+  .f-caption{
+    display:flex; justify-content:space-between; align-items:center; gap:12px;
+    margin-top:10px;
+    font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.07em;
+    color:var(--muted);
+  }
+  .f-caption .fs-status{display:flex; align-items:center; gap:6px; white-space:nowrap;}
+  .f-caption .fs-status .dot{width:5px; height:5px; border-radius:50%; background:var(--oxide); animation:pulse 2.2s ease-in-out infinite;}
+  .featured .visual .frame-corner{
+    position:absolute; width:22px; height:22px; z-index:3; pointer-events:none;
+    border:1.5px solid var(--oxide);
+  }
+  .featured .visual .fc-tl{top:12px; left:12px; border-right:none; border-bottom:none;}
+  .featured .visual .fc-tr{top:12px; right:12px; border-left:none; border-bottom:none;}
+  .featured .visual .fc-bl{bottom:12px; left:12px; border-right:none; border-top:none;}
+  .featured .visual .fc-br{bottom:12px; right:12px; border-left:none; border-top:none;}
+
+  .featured .copy{padding-left:4px;}
+  .featured .copy h3, .featured .copy .desc, .featured .copy .notes-row, .featured .copy .tag-line{
+    transition:opacity .25s ease;
+  }
+  .featured.swapping .copy h3, .featured.swapping .copy .desc,
+  .featured.swapping .copy .notes-row, .featured.swapping .copy .tag-line,
+  .featured.swapping .visual{opacity:0;}
+  .featured .visual{transition:opacity .25s ease;}
+
+  .featured-pager{
+    display:flex; align-items:center; gap:18px; margin-top:34px;
+    padding-top:22px; border-top:1px solid var(--line);
+  }
+  .fp-btn{
+    width:38px; height:38px; border:1px solid var(--line); background:none; color:var(--ink);
+    font-family:var(--mono); font-size:14px; cursor:none;
+    transition:border-color .25s ease, background .25s ease, color .25s ease;
+  }
+  .fp-btn:hover{border-color:var(--ink); background:var(--ink); color:var(--paper);}
+  .fp-dots{display:flex; gap:7px; margin-left:2px;}
+  .fp-dots span{
+    width:6px; height:6px; border-radius:50%; background:var(--line); cursor:none;
+    transition:background .25s ease, transform .25s ease;
+  }
+  .fp-dots span.on{background:var(--oxide); transform:scale(1.35);}
+  .fp-count{
+    margin-left:auto; font-family:var(--mono); font-size:11px;
+    text-transform:uppercase; letter-spacing:.06em; color:var(--muted);
+  }
+  .featured .copy .tag-line{
+    font-family:var(--mono); text-transform:uppercase; letter-spacing:.06em;
+    font-size:12px; color:var(--muted); margin-bottom:18px;
+  }
+  .featured .copy h3{
+    font-family:var(--display); font-weight:700; font-size:clamp(34px,4vw,52px);
+    margin-bottom:18px; letter-spacing:-0.01em; line-height:1.05;
+  }
+  .featured .copy .desc{
+    font-size:15px; line-height:1.8; color:#4a473e; max-width:52ch; margin-bottom:30px;
+  }
+  .notes-row{display:flex; gap:0; border-top:1px solid var(--ink); flex-wrap:wrap;}
+  .notes-row div{flex:1 1 110px; min-width:0; padding:16px 0; border-right:1px solid var(--line);}
+  .notes-row div:last-child{border-right:none;}
+  .notes-row div .k{font-family:var(--mono); text-transform:uppercase; letter-spacing:.05em; font-size:11px; color:var(--muted); margin-bottom:6px;}
+  .notes-row div .v{font-size:14px;}
+
+  /* ---------- SYSTEM LOG (easter-egg terminal, replaces journal + testimonials) ---------- */
+  .terminal-section{padding:120px 0;}
+  .terminal-box{
+    margin:0 5vw; background:#0B0B09; border:1px solid rgba(243,240,232,.12);
+    box-shadow:0 30px 80px rgba(0,0,0,.25);
+  }
+  .terminal-bar{
+    display:flex; align-items:center; gap:8px; padding:12px 16px;
+    border-bottom:1px solid rgba(243,240,232,.1);
+  }
+  .terminal-bar span{width:9px; height:9px; border-radius:50%; background:rgba(243,240,232,.2);}
+  .terminal-bar span:nth-child(1){background:#E8402C;}
+  .terminal-title{
+    margin-left:10px; font-family:var(--mono); font-size:11px; color:rgba(243,240,232,.4);
+  }
+  .terminal-body{
+    padding:28px 24px 34px; font-family:var(--mono); font-size:13px; line-height:1.9;
+    color:rgba(243,240,232,.75); min-height:260px;
+  }
+  .term-line{opacity:0;}
+  .term-line.shown{opacity:1;}
+  .term-line .t-time{color:rgba(243,240,232,.35); margin-right:10px;}
+  .term-line .t-cursor{
+    display:inline-block; width:7px; height:14px; background:#F3F0E8; margin-left:2px;
+    animation:termBlink 1s step-end infinite; vertical-align:middle;
+  }
+  .term-line.egg{cursor:none; color:#F3F0E8;}
+  .term-line.egg .t-prompt{color:var(--oxide);}
+  .term-line.egg:hover{color:#fff;}
+  .term-reveal{
+    max-height:0; overflow:hidden; color:rgba(243,240,232,.55); padding-left:22px;
+    transition:max-height .4s var(--ease);
+  }
+  .term-line.egg.open + .term-reveal{max-height:100px;}
+  @keyframes termBlink{ 50%{opacity:0;} }
+
+  /* ---------- FOOTER ---------- */
+  footer{
+    padding:100px 5vw 40px;
+    border-top:1px solid var(--line);
+    margin-top:140px;
+  }
+  .foot-top{
+    display:flex; justify-content:space-between; align-items:flex-end;
+    flex-wrap:wrap; gap:40px; margin-bottom:80px;
+  }
+  .foot-top h4{
+    font-family:var(--display); font-weight:400; font-size:clamp(28px,4vw,44px); max-width:520px;
+  }
+  .foot-form{display:flex; border-bottom:1px solid var(--ink); padding-bottom:10px; min-width:280px;}
+  .foot-form input{
+    border:none; background:none; outline:none; font-size:14px; flex:1; font-family:var(--sans); color:var(--ink);
+  }
+  .foot-form input::placeholder{color:var(--muted);}
+  .foot-form button{
+    border:none; background:none; font-size:13px; cursor:none; color:var(--ink); font-family:var(--sans);
+  }
+  .foot-bottom{
+    display:flex; justify-content:space-between; font-size:12px; color:var(--muted);
+    flex-wrap:wrap; gap:12px;
+  }
+  .foot-bottom .socials{display:flex; gap:20px;}
+
+  /* ---------- DETAIL OVERLAY (click animation) ---------- */
+  .overlay-panel{
+    position:fixed; inset:0; z-index:100;
+    display:flex; align-items:flex-end;
+    pointer-events:none;
+  }
+  .overlay-panel .scrim{
+    position:absolute; inset:0; background:rgba(20,18,15,.0);
+    transition:background .5s ease;
+  }
+  .overlay-panel.open .scrim{background:rgba(20,18,15,.55);}
+  .overlay-panel.open{pointer-events:auto;}
+  .overlay-card{
+    position:relative;
+    background:var(--paper);
+    width:100%;
+    max-height:88vh;
+    margin:0 auto;
+    padding:64px 8vw 60px;
+    transform:translateY(100%);
+    transition:transform .55s cubic-bezier(.2,.8,.2,1);
+    overflow-y:auto;
+  }
+  .overlay-panel.open .overlay-card{transform:translateY(0%);}
+  .overlay-close{
+    position:absolute; top:28px; right:8vw;
+    font-size:13px; color:var(--muted); cursor:none; background:none; border:none; font-family:var(--sans);
+  }
+  .overlay-inner{display:grid; grid-template-columns:1fr 1.4fr; gap:56px; align-items:start;}
+  .overlay-visual{aspect-ratio:3/4; position:relative; overflow:hidden; background:#DBDBDB;}
+  .overlay-visual .sw{position:absolute; inset:0; background:var(--tile-color);}
+  .overlay-tag{font-size:12px; color:var(--muted); margin-bottom:14px; font-variant-numeric:tabular-nums;}
+  .overlay-title{font-family:var(--display); font-weight:400; font-size:clamp(36px,4.4vw,60px); margin-bottom:6px;}
+  .overlay-line{font-family:var(--mono); font-style:normal; text-transform:uppercase; letter-spacing:.05em; font-size:13px; color:var(--oxide); margin-bottom:22px;}
+  .overlay-desc{font-size:16px; line-height:1.75; color:#4a473e; max-width:460px; margin-bottom:26px;}
+  .overlay-notes{display:flex; gap:10px; flex-wrap:wrap;}
+  .overlay-notes span{
+    font-size:12px; padding:8px 14px; border:1px solid var(--line); color:var(--muted);
+  }
+  .overlay-shop{
+    margin-top:28px; padding-top:22px; border-top:1px solid var(--line);
+    display:flex; align-items:center; gap:20px; flex-wrap:wrap;
+  }
+  .overlay-shop .price{font-family:var(--display); font-size:20px;}
+  .overlay-shop .meta{font-size:12px; color:var(--muted);}
+  .overlay-shop .meta span:not(:last-child)::after{content:'·'; margin-left:8px; color:var(--line);}
+  .overlay-shop button{
+    margin-left:auto; padding:12px 26px; background:var(--ink); color:var(--paper);
+    border:1px solid var(--ink); font-family:var(--sans); font-size:12px; cursor:none;
+    transition:background .35s var(--ease), color .35s var(--ease);
+  }
+  .overlay-shop button:hover{background:transparent; color:var(--ink);}
+  .overlay-shop button.added{background:var(--oxide); border-color:var(--oxide); color:var(--paper);}
+
+  @media (max-width:1000px){
+    .shop-grid{grid-template-columns:repeat(2, 1fr);}
+  }
+  @media (max-width:560px){
+    .shop-grid{grid-template-columns:1fr;}
+    .product-media{aspect-ratio:4/3;}
+  }
+
+  @media (max-width:860px){
+    .grid{grid-template-columns:repeat(2,1fr); grid-auto-rows:180px;}
+    .tile.big{grid-column:span 2; grid-row:span 2;}
+    .tile.wide{grid-column:span 2; grid-row:span 1;}
+    .featured{grid-template-columns:1fr; gap:32px;}
+    .featured-media{max-width:240px;}
+    .overlay-inner{grid-template-columns:1fr;}
+    .lab-meta{flex-wrap:wrap; gap:28px;}
+    .layer-panel{grid-template-columns:1fr;}
+    .layer-pair{justify-content:center;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important; transition:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<div class="grain"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+<div class="cursor-dot" id="cursorDot"></div>
+
+<!-- HERO (A24-style) -->
+<div class="hero" id="hero">
+  <div class="hero-bg" id="heroBg"><canvas id="voidCanvas"></canvas></div>
+  <div class="hero-scrim"></div>
+
+  <div class="hero-nav">
+    <div class="word"><img src="duftlab-logo.png" alt="Duftlab"></div>
+    <div class="links">
+      <span class="links-item" onclick="openQuiz()"><span class="rec"></span> Scent Quiz</span>
+      <span class="links-item" onclick="document.querySelector('#lab').scrollIntoView({behavior:'smooth'})">The Lab</span>
+      <span class="links-item" id="bgToggle" onclick="toggleHeroBg()">BG: Dark</span>
+    </div>
+  </div>
+
+  <div class="hero-stack">
+    <div class="hero-list" id="heroList"></div>
+
+    <div class="hero-info">
+      <div class="line" id="heroLine"></div>
+      <button id="heroDetailBtn">View composition</button>
+    </div>
+  </div>
+
+  <div class="scroll-cue"><span class="arrow">↓</span> Scroll to observe</div>
+</div>
+
+<!-- THE LAB -->
+<section id="lab" class="lab">
+  <div class="lab-content" data-reveal>
+    <p>We do not begin with a scent we want to make. We begin with a <em>question</em>. A variable. A threshold. A degree of change. The fragrance is whatever answers it.</p>
+    <div class="lab-meta">
+      <div>Method<span>Iterative</span></div>
+      <div>Discipline<span>Olfactive Science</span></div>
+      <div>Output<span>6 Compositions</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- READING THE SCALE -->
+<section class="scale-strip" data-reveal>
+  <div class="ss-intro">Reading the scale. Four compositions are named for temperature scales — different instruments, all measuring the same warmth, each reading it differently.</div>
+  <div class="scale-row">
+    <div class="scale-point"><div class="sp-val">0°C</div><div class="sp-name">Celsius</div></div>
+    <div class="scale-point"><div class="sp-val">32°F</div><div class="sp-name">Fahrenheit</div></div>
+    <div class="scale-point"><div class="sp-val">273K</div><div class="sp-name">Kelvin</div></div>
+    <div class="scale-point"><div class="sp-val">0°Ré</div><div class="sp-name">Réaumur</div></div>
+  </div>
+</section>
+
+<!-- QUIZ TEASER -->
+<section class="quiz-teaser" data-reveal>
+  <div class="quiz-teaser-inner">
+    <div>
+      <div class="qt-eyebrow">5 questions · 1 match</div>
+      <h3>Not sure where to start?</h3>
+      <p>Answer five short questions and we'll match you to the composition closest to how you think.</p>
+    </div>
+    <button class="qt-btn" onclick="openQuiz()">Take the Scent Quiz</button>
+  </div>
+</section>
+
+<!-- SHOP / CATALOG -->
+<section class="shop">
+  <div class="section-label" data-reveal>
+    <span class="num">02</span>
+    <h2>The Catalog</h2>
+    <span class="rule"></span>
+  </div>
+  <div class="shop-caption" data-reveal>
+    <div>Index / Composition</div>
+    <div>Olfactory · 2026</div>
+    <div>Eau de Parfum · 50 mL</div>
+  </div>
+  <div class="shop-wrap"><div class="shop-grid" id="shopGrid" data-reveal></div></div>
+</section>
+
+<!-- LAYERING -->
+<section id="layering" class="layering" data-reveal>
+  <div class="section-label">
+    <span class="num">03</span>
+    <h2>The Formula</h2>
+    <span class="rule"></span>
+  </div>
+  <div class="layer-intro">
+    <p>Two compositions. One reaction. Choose any pair below to see how they read when layered on skin.</p>
+  </div>
+  <div class="layer-chips" id="layerChips"></div>
+  <div class="layer-result" id="layerResult">
+    <p class="layer-empty">Select two compositions to begin.</p>
+  </div>
+</section>
+
+<!-- FEATURED -->
+<section>
+  <div class="section-label" data-reveal>
+    <span class="num">04</span>
+    <h2>Featured Specimen</h2>
+    <span class="rule"></span>
+  </div>
+  <div class="featured" id="featuredBlock" data-reveal>
+    <div class="featured-media">
+      <div class="visual" id="featuredVisual">
+        <span class="frame-corner fc-tl"></span><span class="frame-corner fc-tr"></span>
+        <span class="frame-corner fc-bl"></span><span class="frame-corner fc-br"></span>
+      </div>
+      <div class="f-caption">
+        <span id="fsIndex"></span>
+        <span class="fs-status"><span class="dot"></span>Active reading</span>
+      </div>
+    </div>
+    <div class="copy">
+      <div class="tag-line" id="fTag"></div>
+      <h3 id="fName"></h3>
+      <p class="desc" id="fDesc"></p>
+      <div class="notes-row" id="fNotes"></div>
+      <div class="featured-pager">
+        <button class="fp-btn" id="fPrev">←</button>
+        <button class="fp-btn" id="fNext">→</button>
+        <div class="fp-dots" id="fDots"></div>
+        <div class="fp-count" id="fCount"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SYSTEM LOG (easter egg) -->
+<section class="terminal-section">
+  <div class="section-label" data-reveal>
+    <span class="num">05</span>
+    <h2>System Log</h2>
+    <span class="rule"></span>
+  </div>
+  <div class="terminal-box" data-reveal>
+    <div class="terminal-bar"><span></span><span></span><span></span><span class="terminal-title">duftlab@lab-01:~$</span></div>
+    <div class="terminal-body" id="terminalBody"></div>
+  </div>
+</section>
+
+<footer data-reveal>
+  <div class="foot-top">
+    <h4>Join the record. New compositions, first.</h4>
+    <form class="foot-form" onsubmit="return false;">
+      <input type="email" placeholder="Email address" />
+      <button type="submit">Subscribe</button>
+    </form>
+  </div>
+  <div class="foot-bottom">
+    <div>© 2026 Duftlab. All formulas reserved. — -6.262, 106.969 / JKT LAB</div>
+    <div class="socials"><span>Instagram</span><span>Contact</span></div>
+  </div>
+</footer>
+
+<!-- DETAIL OVERLAY -->
+<div class="overlay-panel" id="overlayPanel">
+  <div class="scrim" onclick="closeOverlay()"></div>
+  <div class="overlay-card">
+    <button class="overlay-close" onclick="closeOverlay()">Close ✕</button>
+    <div class="overlay-inner">
+      <div class="overlay-visual"><div class="sw" id="ovColor"></div></div>
+      <div>
+        <div class="overlay-tag" id="ovTag">Specimen No. 01</div>
+        <div class="overlay-title" id="ovTitle">Experimental</div>
+        <div class="overlay-line" id="ovLine">The hypothesis before the proof.</div>
+        <p class="overlay-desc" id="ovDesc"></p>
+        <div class="overlay-notes" id="ovNotes"></div>
+        <div class="overlay-shop" id="ovShop"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCENT QUIZ MODAL -->
+<div class="quiz-modal" id="quizModal">
+  <div class="scrim" onclick="closeQuiz()"></div>
+  <div class="quiz-card" id="quizCard">
+    <div class="quiz-glow" id="quizGlow"></div>
+    <button class="quiz-close" onclick="closeQuiz()">Close ✕</button>
+    <div class="quiz-body-inner" id="quizBody"></div>
+  </div>
+</div>
+
+<!-- STORY CARD (off-screen, rendered to image for sharing) -->
+<div class="story-card" id="storyCard">
+  <div class="sc-media" id="scMedia"></div>
+  <div class="sc-scrim"></div>
+  <div class="sc-top">
+    <img src="duftlab-logo.png" alt="Duftlab">
+    <div class="sc-badge" id="scBadge">No. 01</div>
+  </div>
+  <div class="sc-bottom">
+    <div class="sc-label">Your Composition</div>
+    <div class="sc-name" id="scName">Experimental</div>
+    <div class="sc-line" id="scLine">The hypothesis before the proof.</div>
+    <div class="sc-notes" id="scNotes"></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const compositions = [
+  { n:"01", name:"Experimental", color:"#EDE8DC", accent:"#8A8FA3", photo:"duftlab-celsius.jpg",
+    price:"Rp 780.000", size:"50 mL", type:"Eau de Parfum", stock:"Available",
+    line:"The hypothesis before the proof.",
+    desc:"Before a scent becomes a formula, it is a question asked in the dark — assembled, dismantled, assembled again. Experimental holds no fixed structure; it exists mid-trial, refusing to resolve into a single accord.",
+    notes:["Ozone","Cold Iron","Green Static"] },
+  { n:"02", name:"Conceptual", color:"#EDE8DC", accent:"#9AA394", photo:"duftlab-celsius.jpg",
+    price:"Rp 780.000", size:"50 mL", type:"Eau de Parfum", stock:"Available",
+    line:"An idea, not yet a form.",
+    desc:"Conceptual is the scent equivalent of a sketch before the painting — an outline of an idea that resists completion. It suggests warmth, skin, and paper, without ever committing to any of them.",
+    notes:["Vetiver","Chalk","Musk"] },
+  { n:"03", name:"Celsius", color:"#E6E1D3", accent:"#5D7A85", photo:"duftlab-celsius.jpg",
+    price:"Rp 650.000", size:"50 mL", type:"Eau de Parfum", stock:"Available",
+    line:"Zero is where water remembers itself.",
+    desc:"Named for the scale that begins at freezing and ends at boiling, Celsius moves through both extremes — a cold mineral opening that thaws into something resinous and warm by the skin's own heat.",
+    notes:["Frost Accord","Amber","Skin Musk"] },
+  { n:"04", name:"Fahrenheit", color:"#E9E2D0", accent:"#A66B4A", photo:"duftlab-celsius.jpg",
+    price:"Rp 650.000", size:"50 mL", type:"Eau de Parfum", stock:"Available",
+    line:"The same warmth, measured differently.",
+    desc:"Fahrenheit takes the same thermal question as Celsius and answers it with a wider, more theatrical range — sharper highs, slower descents, and a spiced, sun-warmed dry-down.",
+    notes:["Pink Pepper","Tobacco Leaf","Amber Resin"] },
+  { n:"05", name:"Kelvin", color:"#E4E4DC", accent:"#B7B9BD", photo:"duftlab-celsius.jpg",
+    price:"Rp 920.000", size:"50 mL", type:"Extrait de Parfum", stock:"Limited Batch",
+    line:"Absolute zero has no negative.",
+    desc:"Kelvin begins where matter stops moving — a scent built from stillness rather than heat. Transparent, mineral, and quiet, it is the closest Duftlab has come to formulating silence.",
+    notes:["Aldehydes","Salt","White Musk"] },
+  { n:"06", name:"Reaumur", color:"#E7E3D2", accent:"#6E7550", photo:"duftlab-celsius.jpg",
+    price:"Rp 650.000", size:"50 mL", type:"Eau de Parfum", stock:"Archive Release",
+    line:"A scale the world stopped using.",
+    desc:"Reaumur is named for a measurement history has largely forgotten — obsolete, imprecise, but still true to those who used it. Green, resinous, and slightly out of step with modern perfumery, it rewards patience.",
+    notes:["Oakmoss","Dry Woods","Green Galbanum"] },
+];
+
+/* ---- HERO: background layers + title list ---- */
+const heroBg = document.getElementById('heroBg');
+const heroList = document.getElementById('heroList');
+const heroLine = document.getElementById('heroLine');
+const heroDetailBtn = document.getElementById('heroDetailBtn');
+let activeIndex = 0;
+
+function vividHex(hex, sat, light){
+  const c = new THREE.Color(hex);
+  const hsl = {}; c.getHSL(hsl);
+  c.setHSL(hsl.h, Math.max(hsl.s, sat != null ? sat : 0.72), light != null ? light : 0.56);
+  return '#' + c.getHexString();
+}
+
+compositions.forEach((c, i) => {
+  const item = document.createElement('div');
+  item.className = 'item' + (i === 0 ? ' active' : '');
+  item.style.setProperty('--item-accent', vividHex(c.accent));
+  item.innerHTML = `
+    <span class="t" style="animation-delay:${0.15 + i * 0.06}s">${c.name}</span>
+    <span class="tag" style="animation-delay:${0.25 + i * 0.06}s">No. ${c.n}</span>
+  `;
+  item.addEventListener('click', () => setActive(i));
+  item.addEventListener('mouseenter', () => { if (voidField && i !== activeIndex) voidField.setAccent(c.accent); });
+  item.addEventListener('mouseleave', () => { if (voidField) voidField.setAccent(compositions[activeIndex].accent); });
+  heroList.appendChild(item);
+});
+
+/* ---- VOID FIELD (WebGL predictive-arc particle background) ---- */
+let voidField = null;
+try {
+  voidField = initVoidField(document.getElementById('voidCanvas'), compositions[0].accent);
+} catch (err) {
+  console.warn('Void Field unavailable, falling back to flat dark hero.', err);
+}
+
+function boostAccent(hex){
+  const c = new THREE.Color(hex);
+  const hsl = {};
+  c.getHSL(hsl);
+  c.setHSL(hsl.h, Math.max(hsl.s, 0.78), 0.66);
+  return c;
+}
+
+function initVoidField(canvas, initialColorHex){
+  if (!window.THREE) throw new Error('THREE.js not loaded');
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha:true, antialias:true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+  camera.position.set(0, 0, 19);
+
+  function resize(){
+    const w = canvas.clientWidth || canvas.parentElement.clientWidth;
+    const h = canvas.clientHeight || canvas.parentElement.clientHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', resize);
+
+  function makeDotTexture(){
+    const c = document.createElement('canvas'); c.width = c.height = 64;
+    const ctx = c.getContext('2d');
+    const g = ctx.createRadialGradient(32,32,0,32,32,32);
+    g.addColorStop(0, 'rgba(255,255,255,1)');
+    g.addColorStop(.28, 'rgba(255,255,255,.9)');
+    g.addColorStop(.6, 'rgba(255,255,255,.4)');
+    g.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = g; ctx.fillRect(0,0,64,64);
+    return new THREE.CanvasTexture(c);
+  }
+  const dotTex = makeDotTexture();
+
+  const COUNT = 340;
+  const positions = new Float32Array(COUNT * 3);
+  const basePositions = [];
+  for (let i = 0; i < COUNT; i++){
+    const r = 9 + Math.random() * 7;
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos((Math.random() * 2) - 1);
+    const x = r * Math.sin(phi) * Math.cos(theta);
+    const y = r * Math.sin(phi) * Math.sin(theta) * 0.5;
+    const z = r * Math.cos(phi) - 6;
+    positions[i*3] = x; positions[i*3+1] = y; positions[i*3+2] = z;
+    basePositions.push({ x, y, z, speed: 0.15 + Math.random() * 0.3, offset: Math.random() * Math.PI * 2 });
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+  const color = boostAccent(initialColorHex);
+  const mat = new THREE.PointsMaterial({
+    size: 0.26, map: dotTex, transparent: true, depthWrite: false,
+    color, blending: THREE.AdditiveBlending, opacity: 1
+  });
+  const points = new THREE.Points(geo, mat);
+  scene.add(points);
+
+  const arcGroup = new THREE.Group();
+  scene.add(arcGroup);
+  let arcMaterials = [];
+  function buildArcs(){
+    while (arcGroup.children.length){
+      const l = arcGroup.children.pop();
+      l.geometry.dispose(); l.material.dispose();
+    }
+    arcMaterials = [];
+    const ARC_COUNT = 11;
+    for (let i = 0; i < ARC_COUNT; i++){
+      const a = basePositions[Math.floor(Math.random() * COUNT)];
+      const b = basePositions[Math.floor(Math.random() * COUNT)];
+      const mid = new THREE.Vector3(
+        (a.x + b.x) / 2,
+        (a.y + b.y) / 2 + 3 + Math.random() * 3,
+        (a.z + b.z) / 2
+      );
+      const curve = new THREE.QuadraticBezierCurve3(
+        new THREE.Vector3(a.x, a.y, a.z), mid, new THREE.Vector3(b.x, b.y, b.z)
+      );
+      const pts = curve.getPoints(40);
+      const g = new THREE.BufferGeometry().setFromPoints(pts);
+      g.setDrawRange(0, 0);
+      const m = new THREE.LineBasicMaterial({ color: color.clone(), transparent: true, opacity: 0.45 });
+      const line = new THREE.Line(g, m);
+      line.userData.fullCount = pts.length;
+      line.userData.drawn = 0;
+      arcGroup.add(line);
+      arcMaterials.push(m);
+    }
+  }
+  buildArcs();
+
+  let targetColor = color.clone();
+  function setAccent(hex){ targetColor = boostAccent(hex); }
+
+  const clock = new THREE.Clock();
+  function tick(){
+    const t = clock.getElapsedTime();
+    const posAttr = geo.attributes.position;
+    for (let i = 0; i < COUNT; i++){
+      const b = basePositions[i];
+      posAttr.array[i*3 + 1] = b.y + Math.sin(t * b.speed + b.offset) * 0.4;
+    }
+    posAttr.needsUpdate = true;
+
+    points.rotation.y = t * 0.02;
+    arcGroup.rotation.y = t * 0.02;
+
+    mat.color.lerp(targetColor, 0.04);
+    arcMaterials.forEach(m => m.color.lerp(targetColor, 0.04));
+
+    arcGroup.children.forEach(line => {
+      if (line.userData.drawn < line.userData.fullCount){
+        line.userData.drawn += 2;
+        line.geometry.setDrawRange(0, line.userData.drawn);
+      }
+    });
+
+    renderer.render(scene, camera);
+    requestAnimationFrame(tick);
+  }
+  resize();
+  tick();
+
+  return { setAccent, rebuildArcs: buildArcs };
+}
+
+function setActive(i){
+  activeIndex = i;
+  [...heroList.children].forEach((it, idx) => it.classList.toggle('active', idx === i));
+  heroLine.textContent = compositions[i].line;
+  heroLine.classList.add('show');
+  heroDetailBtn.classList.add('show');
+  if (voidField){
+    voidField.setAccent(compositions[i].accent);
+    voidField.rebuildArcs();
+  }
+}
+setActive(0);
+heroDetailBtn.addEventListener('click', () => openOverlay(compositions[activeIndex]));
+
+function toggleHeroBg(){
+  const body = document.body;
+  const isLight = body.getAttribute('data-hero-bg') === 'light';
+  body.setAttribute('data-hero-bg', isLight ? 'dark' : 'light');
+  document.getElementById('bgToggle').textContent = isLight ? 'BG: Dark' : 'BG: Light';
+}
+
+function openOverlay(c){
+  const ov = document.getElementById('ovColor');
+  ov.style.background = 'none';
+  ov.innerHTML = `<img src="${c.photo}" alt="${c.name}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">`;
+  document.getElementById('ovTag').textContent = "Specimen No. " + c.n;
+  document.getElementById('ovTitle').textContent = c.name;
+  document.getElementById('ovLine').textContent = c.line;
+  document.getElementById('ovDesc').textContent = c.desc;
+  document.getElementById('ovNotes').innerHTML = c.notes.map(n => `<span>${n}</span>`).join('');
+  document.getElementById('ovShop').innerHTML = `
+    <div class="price">${c.price}</div>
+    <div class="meta"><span>${c.size}</span><span>${c.type}</span><span>${c.stock}</span></div>
+    <button onclick="this.textContent='Added ✓'; this.classList.add('added');">Add to Bag</button>
+  `;
+  document.getElementById('overlayPanel').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeOverlay(){
+  document.getElementById('overlayPanel').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+/* ---- ambient color placeholder (static, no photo yet — used only where html2canvas
+   rasterizes the DOM, e.g. the share-to-story card, since animated canvases don't
+   capture reliably there) ---- */
+function ambientDiv(c){
+  return `<div class="ambient" style="--amb-accent:${c.accent}; background:radial-gradient(130% 120% at 22% 12%, rgba(255,255,255,.6), transparent 60%), ${c.color};"></div>`;
+}
+
+/* ---- RIBBON FIELD: real WebGL (Three.js) "predictive-arc" style visual, one GL context per canvas, recolored per composition ---- */
+function ribbonDiv(c){
+  const accent = vividHex(c.accent);
+  return `<div class="ribbon-wrap" style="--amb-accent:${accent}"><canvas class="ribbon-canvas" data-accent="${accent}"></canvas></div>`;
+}
+function initRibbons(container){
+  container.querySelectorAll('.ribbon-canvas:not([data-inited])').forEach(cv => {
+    cv.dataset.inited = '1';
+    try {
+      cv._ribbon = initRibbonFieldGL(cv, cv.dataset.accent);
+    } catch (err) {
+      console.warn('Ribbon Field (WebGL) failed for one canvas — likely hit the browser\'s WebGL context limit.', err);
+    }
+  });
+}
+function initRibbonFieldGL(canvas, hexColor){
+  if (!window.THREE) throw new Error('THREE.js not loaded');
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+  if (!renderer.getContext()) throw new Error('WebGL context unavailable');
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 50);
+  camera.position.set(0, 0, 8);
+
+  function resize(){
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    if (!w || !h) return;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', resize);
+
+  /* Minimal reading: two thin ribbons only, flat opacity, no glow stacking. */
+  const STRANDS = 2;
+  const SEGMENTS = 56;
+  const WORLD_WIDTH = 6.4;
+  const HALF_THICK = 0.045;
+  const group = new THREE.Group();
+  scene.add(group);
+
+  const strands = [];
+  for (let s2 = 0; s2 < STRANDS; s2++){
+    const positions = new Float32Array((SEGMENTS + 1) * 2 * 3);
+    const indices = [];
+    for (let i = 0; i < SEGMENTS; i++){
+      const a = i*2, b = i*2+1, c2 = i*2+2, d = i*2+3;
+      indices.push(a, b, c2,  b, d, c2);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geo.setIndex(indices);
+    const mat = new THREE.MeshBasicMaterial({
+      color: new THREE.Color(hexColor), transparent: true,
+      opacity: s2 === 0 ? 0.85 : 0.3,
+      side: THREE.DoubleSide, depthWrite: false
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.z = -s2 * 0.4;
+    group.add(mesh);
+    strands.push({
+      geo, mat,
+      phase: s2 * 2.1, freq: 1.35 + s2 * 0.3,
+      ampScale: 1 - s2 * 0.35, speed: 0.0004 + s2 * 0.00007
+    });
+  }
+
+  let targetColor = new THREE.Color(hexColor);
+  function setColor(hex){ targetColor = new THREE.Color(hex); }
+
+  let running = true, alive = true, rafId = null;
+  const io = new IntersectionObserver(([entry]) => { running = entry.isIntersecting; }, { threshold: 0.05 });
+  io.observe(canvas);
+
+  const clock = new THREE.Clock();
+  function tick(){
+    if (!alive) return;
+    rafId = requestAnimationFrame(tick);
+    if (!running) return;
+    const t = clock.getElapsedTime();
+    strands.forEach(st => {
+      const pos = st.geo.attributes.position;
+      for (let i = 0; i <= SEGMENTS; i++){
+        const nx = i / SEGMENTS;
+        const x = -WORLD_WIDTH / 2 + nx * WORLD_WIDTH;
+        const y = Math.sin(nx * Math.PI * st.freq + t * st.speed * 1000 + st.phase) * 1.15 * st.ampScale
+                + Math.sin(nx * Math.PI * st.freq * 1.9 + t * st.speed * 520) * 0.22 * st.ampScale;
+        pos.setXYZ(i*2,   x, y + HALF_THICK, 0);
+        pos.setXYZ(i*2+1, x, y - HALF_THICK, 0);
+      }
+      pos.needsUpdate = true;
+      st.mat.color.lerp(targetColor, 0.05);
+    });
+    renderer.render(scene, camera);
+  }
+  resize();
+  tick();
+
+  /* Frees the GL context. Browsers cap concurrent WebGL contexts, so anything
+     that mounts ribbons repeatedly (quiz retakes, overlay reopens, featured
+     paging) must dispose the old one or it will silently stop rendering. */
+  function dispose(){
+    alive = false;
+    if (rafId) cancelAnimationFrame(rafId);
+    io.disconnect();
+    window.removeEventListener('resize', resize);
+    strands.forEach(st => { st.geo.dispose(); st.mat.dispose(); });
+    renderer.dispose();
+    const ext = renderer.getContext().getExtension('WEBGL_lose_context');
+    if (ext) ext.loseContext();
+  }
+
+  return { setColor, dispose };
+}
+
+/* Tears down every ribbon instance inside a container before it is replaced. */
+function disposeRibbons(container){
+  if (!container) return;
+  container.querySelectorAll('.ribbon-canvas').forEach(cv => {
+    if (cv._ribbon && cv._ribbon.dispose) cv._ribbon.dispose();
+    cv._ribbon = null;
+  });
+}
+
+/* ---- SHOP / CATALOG ---- */
+const shopGrid = document.getElementById('shopGrid');
+
+compositions.forEach((c, i) => {
+  const card = document.createElement('div');
+  card.className = 'product-card';
+  // NOTE: every variant temporarily shares one product photo until the rest of
+  // the shoot is delivered. Swap the per-variant `photo` field to split them out.
+  card.innerHTML = `
+    <div class="product-media">
+      <span class="product-index">${c.n}</span>
+      <span class="product-stock${c.stock !== 'Available' ? ' limited' : ''}">${c.stock}</span>
+      <img src="${c.photo}" alt="${c.name}">
+      <div class="product-notes-hover">
+        <div class="pnh-label">Top · Middle · Base</div>
+        <div class="pnh-notes">${c.notes.map(n => `<span>${n}</span>`).join('')}</div>
+      </div>
+    </div>
+    <div class="product-body">
+      <div class="pn"><h4>${c.name}</h4><span class="price">${c.price}</span></div>
+      <div class="pl">${c.line}</div>
+      <div class="spec-row">
+        <div><span>Index</span><b>SPC-${c.n}</b></div>
+        <div><span>Volume</span><b>${c.size}</b></div>
+        <div><span>Defined Type</span><b>${c.type}</b></div>
+        <div><span>Status</span><b class="${c.stock === 'Available' ? 'status-active' : ''}">${c.stock}</b></div>
+      </div>
+      <button class="product-add">Add to Bag</button>
+    </div>
+  `;
+  card.querySelector('.product-media').addEventListener('click', () => openOverlay(c));
+  card.querySelector('h4').style.cursor = 'pointer';
+  card.querySelector('h4').addEventListener('click', () => openOverlay(c));
+  const addBtn = card.querySelector('.product-add');
+  addBtn.addEventListener('click', () => {
+    addBtn.textContent = 'Added ✓';
+    addBtn.classList.add('added');
+    setTimeout(() => { addBtn.textContent = 'Add to Bag'; addBtn.classList.remove('added'); }, 1800);
+  });
+  shopGrid.appendChild(card);
+});
+
+/* ---- THE FORMULA (layering tool) ---- */
+const layerChips = document.getElementById('layerChips');
+const layerResult = document.getElementById('layerResult');
+let layerSelected = [];
+
+compositions.forEach((c, i) => {
+  const chip = document.createElement('button');
+  chip.className = 'layer-chip';
+  chip.style.setProperty('--chip-accent', vividHex(c.accent));
+  chip.innerHTML = `<span class="dot"></span>${c.name}`;
+  chip.addEventListener('click', () => toggleLayer(i, chip));
+  layerChips.appendChild(chip);
+});
+
+function toggleLayer(i, chipEl){
+  const idx = layerSelected.indexOf(i);
+  if (idx > -1){
+    layerSelected.splice(idx, 1);
+    chipEl.classList.remove('selected');
+  } else {
+    if (layerSelected.length >= 2){
+      const removedIdx = layerSelected.shift();
+      layerChips.children[removedIdx].classList.remove('selected');
+    }
+    layerSelected.push(i);
+    chipEl.classList.add('selected');
+  }
+  renderLayerResult();
+}
+
+function renderLayerResult(){
+  if (layerSelected.length < 2){
+    layerResult.innerHTML = `<p class="layer-empty">${layerSelected.length === 0 ? 'Select two compositions to begin.' : 'One more — pick another.'}</p>`;
+    return;
+  }
+  const [a, b] = layerSelected.map(i => compositions[i]);
+  const accentA = vividHex(a.accent);
+  const accentB = vividHex(b.accent);
+  const blend = blendFor(a, b);
+  disposeRibbons(layerResult);
+  layerResult.innerHTML = `
+    <div class="layer-panel">
+      <div class="layer-wave-box"><canvas id="waveCanvas"></canvas></div>
+      <div class="layer-wave-legend">
+        <span><i class="ln" style="background:${accentA}"></i>${a.name}</span>
+        <span><i class="ln" style="background:${accentB}"></i>${b.name}</span>
+        <span><i class="ln" style="background:#F3F0E8"></i>Resultant</span>
+      </div>
+      <div class="layer-equation">
+        <span class="eq-name">${a.name}</span>
+        <span class="eq-op">+</span>
+        <span class="eq-name">${b.name}</span>
+        <span class="eq-op">=</span>
+        <span class="eq-name" style="color:${accentA}">${blend.name}</span>
+      </div>
+      <div class="layer-story">
+        <div class="ls-index">Resultant / Not sold separately</div>
+        <h4>${blend.name}</h4>
+        <p>${blend.story}</p>
+        <button class="layer-reset" onclick="resetLayer()">Reset selection</button>
+      </div>
+    </div>
+  `;
+  initInterferenceWave(document.getElementById('waveCanvas'), accentA, accentB);
+  requestAnimationFrame(() => {
+    const panel = layerResult.querySelector('.layer-panel');
+    if (panel) requestAnimationFrame(() => panel.classList.add('show'));
+  });
+}
+
+function resetLayer(){
+  disposeRibbons(layerResult);
+  layerSelected = [];
+  [...layerChips.children].forEach(c => c.classList.remove('selected'));
+  renderLayerResult();
+}
+
+/* ---- BLEND REGISTRY: every pair resolves to a named event + its story ---- */
+const blendRegistry = {
+  "Conceptual|Experimental": { name:"The Draft", story:"Two unfinished things put in the same room. Neither one resolves the other, so they keep circling: static meeting chalk, ozone meeting paper. What you get is the smell of a plan being argued over at 2am, still nowhere near settled, and better for it." },
+  "Celsius|Experimental": { name:"First Contact", story:"A cold mineral surface touched by something still reacting. The frost accord holds its line for about a minute, then the iron underneath starts to warm it from below. It reads like the first measurement of a thing nobody has measured before." },
+  "Experimental|Fahrenheit": { name:"The Overshoot", story:"Push an unstable formula into a wider range and it does not settle, it accelerates. Pink pepper snaps against green static, tobacco drags it back down. This is the blend for the moment you realise you have gone further than you planned and decided to keep going." },
+  "Experimental|Kelvin": { name:"Vacuum Test", story:"The loudest composition placed inside the quietest one. Kelvin does not soften Experimental so much as isolate it, stripping the noise until only the strange metallic centre is left ringing. Silence used as an instrument rather than an absence." },
+  "Experimental|Reaumur": { name:"Obsolete Machinery", story:"Cold iron laid over oakmoss and dry wood. It smells like a workshop that has not been opened in decades, where the tools still work but nobody remembers the system they belonged to. Unresolved, but ancient about it." },
+  "Celsius|Conceptual": { name:"Condensation", story:"An idea forming on a cold surface. Chalk and vetiver sit under a frost opening, and as skin warms it the whole thing turns damp and readable. The blend for thoughts that only become clear once something cools down." },
+  "Conceptual|Fahrenheit": { name:"The Long Rehearsal", story:"A sketch performed before it is finished. Fahrenheit gives Conceptual the theatre it was avoiding: spice and tobacco pulling an outline into something almost declarative, then backing off before it commits. Warm, hesitant, deliberate." },
+  "Conceptual|Kelvin": { name:"White Room", story:"Two compositions that both refuse to announce themselves. Aldehydes over chalk, musk under salt, nothing louder than a held breath. It barely reads as fragrance, which is the entire point. The most minimal thing in the catalog." },
+  "Conceptual|Reaumur": { name:"The Margins", story:"Paper and moss. An unfinished note written in the edge of a book nobody has taken off the shelf. Galbanum keeps it green and slightly bitter, musk keeps it human. Patient, unfashionable, quietly certain of itself." },
+  "Celsius|Fahrenheit": { name:"Two Thermometers", story:"The same warmth measured twice, disagreeing. Frost and pink pepper open at once, then amber arrives from both directions and they finally agree on something. A blend about how two people can describe one moment completely differently and both be right." },
+  "Celsius|Kelvin": { name:"The Freeze", story:"Downward only. Celsius stops at zero, Kelvin keeps going past where it should be possible. Salt, frost, aldehydes and white musk, with almost nothing warm underneath to catch you. Clean to the point of severity." },
+  "Celsius|Reaumur": { name:"Riverbed, Winter", story:"Cold mineral water running over wet wood and moss. The frost keeps it sharp, the oakmoss keeps it earthbound, and the skin musk sits somewhere in between. The most literal landscape the catalog produces." },
+  "Fahrenheit|Kelvin": { name:"Thermal Shock", story:"The widest range in the archive collapsed into one wearing. Spiced heat opens against absolute stillness and neither gives way, so the blend keeps trading places on skin for hours. Unstable in a way that is entirely intentional." },
+  "Fahrenheit|Reaumur": { name:"The Slow Burn", story:"Tobacco, amber resin, dry wood, oakmoss. Nothing here is in a hurry. It smells like a room where something has been smouldering for a long time and no one has decided whether to put it out. The warmest thing you can layer." },
+  "Kelvin|Reaumur": { name:"Deprecated", story:"A scale nobody uses anymore, read by an instrument that measures nothing. Salt and aldehydes floating above galbanum and dry wood. It should not work. It is the blend regular customers keep coming back for." },
+};
+function blendFor(a, b){
+  const key = [a.name, b.name].sort().join('|');
+  return blendRegistry[key] || { name:"Uncatalogued", story:"This pairing has not been formally logged yet. Wear it and tell us what happened." };
+}
+
+/* ---- INTERFERENCE WAVE: two composition "signals" merging into one resultant line ---- */
+function initInterferenceWave(canvas, colorA, colorB){
+  const ctx = canvas.getContext('2d');
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  let w, h;
+  function resize(){
+    w = canvas.clientWidth; h = canvas.clientHeight;
+    canvas.width = w * dpr; canvas.height = h * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  let running = true;
+  const io = new IntersectionObserver(([e]) => { running = e.isIntersecting; }, { threshold: 0.05 });
+  io.observe(canvas);
+
+  function waveY(x, freq, phase, amp, t, speed){
+    return Math.sin((x / w) * Math.PI * freq + t * speed + phase) * amp;
+  }
+
+  function draw(t){
+    requestAnimationFrame(draw);
+    if (!running || !w || !h) return;
+    ctx.clearRect(0, 0, w, h);
+    const mid = h / 2;
+    const ampA = h * 0.22, freqA = 2.2, speedA = 0.0016;
+    const ampB = h * 0.16, freqB = 3.1, speedB = -0.0012;
+
+    // signal A
+    ctx.beginPath();
+    for (let x = 0; x <= w; x += 4){
+      const y = mid + waveY(x, freqA, 0, ampA, t, speedA);
+      x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = colorA; ctx.globalAlpha = 0.35; ctx.lineWidth = 1; ctx.stroke();
+
+    // signal B
+    ctx.beginPath();
+    for (let x = 0; x <= w; x += 4){
+      const y = mid + waveY(x, freqB, 1.4, ampB, t, speedB);
+      x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = colorB; ctx.globalAlpha = 0.35; ctx.lineWidth = 1; ctx.stroke();
+
+    // resultant (sum) — the "formula"
+    ctx.beginPath();
+    for (let x = 0; x <= w; x += 4){
+      const y = mid
+        + waveY(x, freqA, 0, ampA, t, speedA) * 0.55
+        + waveY(x, freqB, 1.4, ampB, t, speedB) * 0.55;
+      x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = '#F3F0E8'; ctx.globalAlpha = 0.95; ctx.lineWidth = 1.4;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+  requestAnimationFrame(draw);
+}
+
+/* ---- FEATURED SPECIMEN: pageable through every composition ---- */
+const featuredVisual = document.getElementById('featuredVisual');
+const featuredBlock = document.getElementById('featuredBlock');
+let featuredIndex = 0;
+
+function renderFeatured(i, animate){
+  const c = compositions[i];
+  const apply = () => {
+    featuredVisual.querySelector('.f-photo')?.remove();
+    featuredVisual.insertAdjacentHTML('afterbegin',
+      `<img class="f-photo" src="${c.photo}" alt="${c.name}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">`);
+    document.getElementById('fsIndex').textContent = `Specimen ${c.n} / ${c.name.slice(0,3).toUpperCase()}`;
+    document.getElementById('fTag').textContent = `[ Specimen No. ${c.n} ]`;
+    document.getElementById('fName').textContent = c.name;
+    document.getElementById('fDesc').textContent = c.desc;
+    document.getElementById('fNotes').innerHTML = ['Top','Mid','Base']
+      .map((k, n) => `<div><div class="k">${k}</div><div class="v">${c.notes[n]}</div></div>`).join('');
+    document.getElementById('fCount').textContent =
+      `${String(i+1).padStart(2,'0')} / ${String(compositions.length).padStart(2,'0')}`;
+    [...document.getElementById('fDots').children].forEach((d, n) => d.classList.toggle('on', n === i));
+  };
+  if (animate){
+    featuredBlock.classList.add('swapping');
+    setTimeout(() => { apply(); requestAnimationFrame(() => featuredBlock.classList.remove('swapping')); }, 220);
+  } else {
+    apply();
+  }
+}
+
+if (featuredVisual){
+  const dots = document.getElementById('fDots');
+  compositions.forEach((_, i) => {
+    const d = document.createElement('span');
+    d.addEventListener('click', () => { featuredIndex = i; renderFeatured(i, true); });
+    dots.appendChild(d);
+  });
+  document.getElementById('fPrev').addEventListener('click', () => {
+    featuredIndex = (featuredIndex - 1 + compositions.length) % compositions.length;
+    renderFeatured(featuredIndex, true);
+  });
+  document.getElementById('fNext').addEventListener('click', () => {
+    featuredIndex = (featuredIndex + 1) % compositions.length;
+    renderFeatured(featuredIndex, true);
+  });
+  renderFeatured(0, false);
+}
+
+/* ---- SYSTEM LOG (easter-egg terminal) ---- */
+const terminalLines = [
+  { time:"04:12:09", text:"boot sequence complete — duftlab-os v2.6.0" },
+  { time:"04:12:11", text:"loading olfactive index... 6 compositions found" },
+  { time:"04:12:14", text:"WARNING: batch EXP-01 exhibits unresolved volatility (this is intentional)" },
+  { time:"04:12:19", text:"calibrating scales... celsius, fahrenheit, kelvin, réaumur — synced" },
+  { time:"04:12:26", text:"note: réaumur scale deprecated since the 1800s. we kept it anyway." },
+  { time:"04:12:33", text:"> sudo make sense of kelvin", egg:"permission denied. silence cannot be sudo'd." },
+  { time:"04:12:41", text:"> locate easter_egg.txt", egg:"found. you weren't supposed to see this — tell us at hello@duftlab and we'll remember it." },
+  { time:"04:12:50", text:"end of log. thank you for reading the fine print." },
+];
+
+function typeLine(el, text, speed, onDone){
+  let i = 0;
+  const cursor = document.createElement('span');
+  cursor.className = 't-cursor';
+  el.appendChild(cursor);
+  const iv = setInterval(() => {
+    cursor.insertAdjacentText('beforebegin', text[i]);
+    i++;
+    if (i >= text.length){
+      clearInterval(iv);
+      cursor.remove();
+      if (onDone) onDone();
+    }
+  }, speed);
+}
+
+function runTerminal(){
+  const body = document.getElementById('terminalBody');
+  if (body.dataset.ran) return;
+  body.dataset.ran = '1';
+  let i = 0;
+  function next(){
+    if (i >= terminalLines.length) return;
+    const item = terminalLines[i];
+    const line = document.createElement('div');
+    line.className = 'term-line shown' + (item.egg ? ' egg' : '');
+    const timeSpan = `<span class="t-time">${item.time}</span>`;
+    line.innerHTML = timeSpan;
+    const textSpan = document.createElement('span');
+    if (item.text.startsWith('>')) textSpan.innerHTML = `<span class="t-prompt">${item.text}</span>`.replace(item.text, '');
+    line.appendChild(textSpan);
+    body.appendChild(line);
+
+    const display = item.text.startsWith('>') ? item.text : item.text;
+    typeLine(textSpan, display, item.egg ? 22 : 14, () => {
+      if (item.egg){
+        const reveal = document.createElement('div');
+        reveal.className = 'term-reveal';
+        reveal.textContent = '// ' + item.egg;
+        body.appendChild(reveal);
+        line.addEventListener('click', () => {
+          line.classList.toggle('open');
+          reveal.style.maxHeight = line.classList.contains('open') ? reveal.scrollHeight + 'px' : null;
+        });
+      }
+      i++;
+      setTimeout(next, item.egg ? 500 : 250);
+    });
+  }
+  next();
+}
+
+const terminalObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => { if (entry.isIntersecting) runTerminal(); });
+}, { threshold: 0.4 });
+const terminalBoxEl = document.querySelector('.terminal-box');
+if (terminalBoxEl) terminalObserver.observe(terminalBoxEl);
+/* ---- CUSTOM CURSOR ---- */
+const cursorDot = document.getElementById('cursorDot');
+const cursorRing = document.getElementById('cursorRing');
+let mouseX = innerWidth/2, mouseY = innerHeight/2, ringX = mouseX, ringY = mouseY;
+window.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
+(function tick(){
+  ringX += (mouseX - ringX) * 0.18;
+  ringY += (mouseY - ringY) * 0.18;
+  cursorDot.style.left = mouseX + 'px'; cursorDot.style.top = mouseY + 'px';
+  cursorRing.style.left = ringX + 'px'; cursorRing.style.top = ringY + 'px';
+  requestAnimationFrame(tick);
+})();
+document.querySelectorAll('.hero-list .item, .hero-info button, .hero-nav .links-item, .foot-form button, .overlay-close, footer h4, .foot-form input, .layer-chip, .product-add, .product-media, .product-body h4')
+  .forEach(el => {
+    el.addEventListener('mouseenter', () => cursorRing.classList.add('hover'));
+    el.addEventListener('mouseleave', () => cursorRing.classList.remove('hover'));
+  });
+const HOVER_SEL = '.quiz-opt, .qa-primary, .qa-share, .qa-retake, .quiz-close, .qt-btn, .fp-btn, .fp-dots span, .layer-chip, .layer-reset, .term-line.egg';
+document.addEventListener('mouseover', e => {
+  if (e.target.closest(HOVER_SEL)) cursorRing.classList.add('hover');
+});
+document.addEventListener('mouseout', e => {
+  if (e.target.closest(HOVER_SEL)) cursorRing.classList.remove('hover');
+});
+
+/* ---- HERO PARALLAX (subtle, mouse-driven) ---- */
+const heroEl = document.getElementById('hero');
+heroEl.addEventListener('mousemove', e => {
+  const px = (e.clientX / innerWidth - 0.5);
+  const py = (e.clientY / innerHeight - 0.5);
+  heroBg.style.transform = `translate(${px * -14}px, ${py * -10}px)`;
+});
+heroEl.addEventListener('mouseleave', () => { heroBg.style.transform = 'translate(0,0)'; });
+heroBg.style.transition = 'transform .6s var(--ease)';
+
+/* ---- SCROLL REVEAL ---- */
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting){
+      entry.target.classList.add('in-view');
+      revealObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.18 });
+document.querySelectorAll('[data-reveal]').forEach(el => revealObserver.observe(el));
+
+/* ---- MAGNETIC BUTTONS ---- */
+document.querySelectorAll('.hero-info button').forEach(btn => {
+  btn.addEventListener('mousemove', e => {
+    const r = btn.getBoundingClientRect();
+    const mx = e.clientX - r.left - r.width/2;
+    const my = e.clientY - r.top - r.height/2;
+    btn.style.transform = `translate(${mx*0.25}px, ${my*0.4}px)`;
+  });
+  btn.addEventListener('mouseleave', () => { btn.style.transform = 'translate(0,0)'; });
+});
+
+/* ---- SCENT QUIZ ---- */
+const quizQuestions = [
+  { q:"How do you like to start something new?", options:[
+    {t:"With a hypothesis, not a plan", v:"Experimental"},
+    {t:"With an idea I haven't fully formed yet", v:"Conceptual"},
+    {t:"By testing the temperature of the room first", v:"Celsius"},
+    {t:"By jumping straight into the heat of it", v:"Fahrenheit"},
+  ]},
+  { q:"Pick a texture that feels most like you.", options:[
+    {t:"Cold iron", v:"Experimental"},
+    {t:"Chalk dust", v:"Conceptual"},
+    {t:"Polished steel", v:"Kelvin"},
+    {t:"Damp moss", v:"Reaumur"},
+  ]},
+  { q:"Choose a state of mind.", options:[
+    {t:"Mid-trial, nothing resolved yet", v:"Experimental"},
+    {t:"Perfectly still, perfectly quiet", v:"Kelvin"},
+    {t:"Slightly out of step with everyone else", v:"Reaumur"},
+    {t:"An outline that resists finishing", v:"Conceptual"},
+  ]},
+  { q:"What's your ideal pace?", options:[
+    {t:"Iterative — trial, error, trial again", v:"Experimental"},
+    {t:"Slow and theatrical", v:"Fahrenheit"},
+    {t:"Measured and precise", v:"Celsius"},
+    {t:"Patient, unbothered by trends", v:"Reaumur"},
+  ]},
+  { q:"If you had to disappear into a scent, you'd want to feel—", options:[
+    {t:"Unresolved", v:"Experimental"},
+    {t:"Weightless", v:"Kelvin"},
+    {t:"Grounded", v:"Reaumur"},
+    {t:"Warm", v:"Fahrenheit"},
+    {t:"Clear", v:"Celsius"},
+    {t:"Abstract", v:"Conceptual"},
+  ]},
+];
+
+let quizAnswers = [];
+let quizStep = 0;
+
+function setQuizGlow(hex){
+  document.getElementById('quizGlow').style.setProperty('--q-accent', hex);
+}
+
+function openQuiz(){
+  quizAnswers = [];
+  quizStep = 0;
+  // free any ribbon left over from a previous result before re-rendering
+  disposeRibbons(document.getElementById('quizBody'));
+  setQuizGlow('#7A2E2E');
+  document.getElementById('quizCard').style.removeProperty('--q-accent-solid');
+  document.getElementById('quizModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  renderQuizStep();
+}
+function closeQuiz(){
+  disposeRibbons(document.getElementById('quizBody'));
+  document.getElementById('quizModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.getElementById('quizModal').classList.contains('open')) closeQuiz();
+});
+
+/* Fades the panel out, swaps content, fades back in — avoids the hard innerHTML flash. */
+function swapQuizBody(render){
+  const body = document.getElementById('quizBody');
+  body.classList.add('swapping');
+  setTimeout(() => {
+    render();
+    body.scrollTop = 0;
+    requestAnimationFrame(() => body.classList.remove('swapping'));
+  }, 180);
+}
+
+function renderQuizStep(){
+  const body = document.getElementById('quizBody');
+  const total = quizQuestions.length;
+
+  if (quizStep < total){
+    const q = quizQuestions[quizStep];
+    const dots = quizQuestions.map((_, i) => {
+      const cls = i < quizStep ? 'done' : (i === quizStep ? 'current' : '');
+      return `<span class="${cls}"></span>`;
+    }).join('');
+    body.innerHTML = `
+      <div class="quiz-progress">${dots}</div>
+      <div class="quiz-qnum">${String(quizStep + 1).padStart(2,'0')} / ${String(total).padStart(2,'0')}</div>
+      <div class="quiz-question">${q.q}</div>
+      <div class="quiz-options">
+        ${q.options.map((o, i) => {
+          const comp = compositions.find(x => x.name === o.v);
+          const accent = comp ? vividHex(comp.accent) : '#E8402C';
+          return `<button class="quiz-opt" data-v="${o.v}" style="--opt-accent:${accent}; animation-delay:${0.08 + i * 0.06}s">${o.t}</button>`;
+        }).join('')}
+      </div>
+    `;
+    body.querySelectorAll('.quiz-opt').forEach(btn => {
+      btn.addEventListener('mouseenter', () => setQuizGlow(btn.style.getPropertyValue('--opt-accent')));
+      btn.addEventListener('click', () => {
+        if (btn.disabled) return;
+        btn.classList.add('picked');
+        body.querySelectorAll('.quiz-opt').forEach(b => b.disabled = true);
+        quizAnswers.push(btn.dataset.v);
+        quizStep++;
+        setTimeout(() => swapQuizBody(renderQuizStep), 220);
+      });
+    });
+  } else {
+    renderQuizLoading();
+  }
+}
+
+function renderQuizLoading(){
+  const body = document.getElementById('quizBody');
+  body.innerHTML = `
+    <div class="quiz-loading">
+      <div>Calibrating your match…</div>
+      <div class="ql-bar"></div>
+    </div>
+  `;
+  setTimeout(() => swapQuizBody(renderQuizResult), 900);
+}
+
+function renderQuizResult(){
+  disposeRibbons(document.getElementById('quizBody'));
+  const tally = {};
+  quizAnswers.forEach(v => { tally[v] = (tally[v] || 0) + 1; });
+  let best = -1;
+  compositions.forEach(c => { best = Math.max(best, tally[c.name] || 0); });
+  // ties are broken at random instead of always defaulting to the first composition
+  const tied = compositions.filter(c => (tally[c.name] || 0) === best);
+  const c = tied[Math.floor(Math.random() * tied.length)];
+  const accent = vividHex(c.accent);
+  setQuizGlow(accent);
+  document.getElementById('quizCard').style.setProperty('--q-accent-solid', accent);
+  const body = document.getElementById('quizBody');
+  body.innerHTML = `
+    <div class="quiz-result" style="--q-accent-solid:${accent}">
+      <div class="qr-label">Your match — Specimen No. ${c.n}</div>
+      <div class="qr-visual" id="qrVisual"></div>
+      <h3>${c.name}</h3>
+      <div class="qr-line">${c.line}</div>
+      <div class="quiz-actions">
+        <button class="qa-share" id="shareBtn">↗ Share your match</button>
+        <button class="qa-primary" onclick="closeQuiz(); openOverlay(compositions.find(x=>x.name==='${c.name}'));">View this composition</button>
+        <div class="quiz-share-note" id="shareNote"></div>
+        <button class="qa-retake" onclick="restartQuiz()">Retake the quiz</button>
+      </div>
+    </div>
+  `;
+  const qrVisual = document.getElementById('qrVisual');
+  qrVisual.innerHTML = `<img src="${c.photo}" alt="${c.name}">`;
+  document.getElementById('shareBtn').addEventListener('click', () => shareStory(c));
+}
+
+function restartQuiz(){
+  quizAnswers = [];
+  quizStep = 0;
+  disposeRibbons(document.getElementById('quizBody'));
+  setQuizGlow('#7A2E2E');
+  document.getElementById('quizCard').style.removeProperty('--q-accent-solid');
+  swapQuizBody(renderQuizStep);
+}
+
+/* ---- STORY IMAGE GENERATION + SHARE ---- */
+async function shareStory(c){
+  const noteEl = document.getElementById('shareNote');
+  noteEl.textContent = 'Preparing your story…';
+
+  document.getElementById('scMedia').innerHTML = `<img src="${c.photo}" alt="${c.name}">`;
+  document.getElementById('scBadge').textContent = 'No. ' + c.n;
+  document.getElementById('scName').textContent = c.name;
+  document.getElementById('scLine').textContent = c.line;
+  document.getElementById('scNotes').innerHTML = c.notes.map(n => `<span>${n}</span>`).join('');
+
+  try{
+    const canvas = await html2canvas(document.getElementById('storyCard'), { useCORS:true, backgroundColor:null, width:1080, height:1920 });
+    canvas.toBlob(async (blob) => {
+      const file = new File([blob], `duftlab-${c.name.toLowerCase()}.png`, { type:'image/png' });
+      if (navigator.canShare && navigator.canShare({ files:[file] })){
+        try{
+          await navigator.share({ files:[file], title:`My Duftlab match: ${c.name}` });
+          noteEl.textContent = 'Shared — pick Instagram to post to your Story.';
+          return;
+        } catch(err){ /* user cancelled or unsupported — fall through to download */ }
+      }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `duftlab-${c.name.toLowerCase()}.png`;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+      noteEl.textContent = 'Image saved — open Instagram and share it to your Story.';
+    }, 'image/png');
+  } catch(err){
+    noteEl.textContent = "Couldn't generate the image. Please try again.";
+  }
+}
+</script>
+
+</body>
+</html>
