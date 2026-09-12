@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>duftlab — admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  :root{
+    --bg:#0B0B09; --ink:#F3F0E8; --muted:rgba(243,240,232,.5); --line:rgba(243,240,232,.14);
+    --oxide:#E8402C; --card:#141310; --ok:#4CAF7D;
+    --display:'Space Grotesk',sans-serif; --mono:'Space Mono',monospace; --sans:'Inter',sans-serif;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--bg); color:var(--ink); font-family:var(--sans); min-height:100vh;}
+  a{color:inherit;}
+
+  #configWarning{
+    display:none; background:var(--oxide); color:#fff; font-family:var(--mono);
+    font-size:12px; padding:12px 20px; text-align:center;
+  }
+
+  /* ---------- LOGIN ---------- */
+  #loginScreen{ min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+  .login-box{ width:100%; max-width:360px; padding:40px; border:1px solid var(--line); }
+  .login-box h1{font-family:var(--display); font-size:22px; margin-bottom:6px;}
+  .login-box .sub{font-family:var(--mono); font-size:11px; color:var(--muted); margin-bottom:32px; text-transform:uppercase; letter-spacing:.05em;}
+  .login-box input{
+    width:100%; background:none; border:none; border-bottom:1px solid var(--line);
+    outline:none; font-family:var(--sans); font-size:15px; color:var(--ink); padding:12px 2px; margin-bottom:18px;
+  }
+  .login-box input:focus{border-color:var(--ink);}
+  .login-box button{
+    width:100%; padding:13px 0; background:var(--ink); color:var(--bg); border:none;
+    font-family:var(--mono); font-size:12px; text-transform:uppercase; letter-spacing:.08em; cursor:pointer; margin-top:8px;
+  }
+  .login-box button:hover{background:var(--oxide); color:#fff;}
+  .login-error{font-family:var(--mono); font-size:11px; color:var(--oxide); margin-top:12px; min-height:14px;}
+
+  /* ---------- SHELL ---------- */
+  #adminShell{display:none;}
+  header{ display:flex; align-items:center; justify-content:space-between; padding:20px 5vw; border-bottom:1px solid var(--line); }
+  header .logo{font-family:var(--display); font-weight:700; font-size:20px;}
+  header .logo span{font-weight:400; color:var(--muted);}
+  header button{
+    background:none; border:1px solid var(--line); color:var(--ink);
+    font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.05em; padding:8px 14px; cursor:pointer;
+  }
+  header button:hover{border-color:var(--ink);}
+
+  .tabs{display:flex; gap:0; padding:0 5vw; border-bottom:1px solid var(--line); overflow-x:auto;}
+  .tab-btn{
+    background:none; border:none; padding:16px 20px; font-family:var(--mono); font-size:12px;
+    text-transform:uppercase; letter-spacing:.05em; color:var(--muted); cursor:pointer;
+    border-bottom:2px solid transparent; white-space:nowrap;
+  }
+  .tab-btn.active{color:var(--ink); border-bottom-color:var(--oxide);}
+
+  main{padding:40px 5vw 100px; max-width:1100px; margin:0 auto;}
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  /* ---------- OVERVIEW ---------- */
+  .range-picker{display:flex; gap:0; border:1px solid var(--line); width:fit-content; margin-bottom:32px;}
+  .range-btn{
+    background:none; border:none; color:var(--muted); padding:9px 18px; cursor:pointer;
+    font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.04em;
+    border-right:1px solid var(--line);
+  }
+  .range-btn:last-child{border-right:none;}
+  .range-btn.active{color:var(--ink); background:var(--card);}
+
+  .stat-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--line); margin-bottom:40px;}
+  @media(max-width:800px){ .stat-grid{grid-template-columns:repeat(2,1fr);} }
+  .stat-card{background:var(--bg); padding:22px; cursor:pointer;}
+  .stat-card:hover{background:var(--card);}
+  .stat-card .num{font-family:var(--display); font-size:30px;}
+  .stat-card .lbl{font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-top:6px;}
+
+  .section-h{font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:16px; margin-top:44px;}
+  .section-h:first-of-type{margin-top:0;}
+
+  .funnel{display:flex; gap:1px; background:var(--line); margin-bottom:8px;}
+  .funnel-step{background:var(--bg); flex:1; padding:20px 18px; text-align:center; position:relative;}
+  .funnel-step .num{font-family:var(--display); font-size:26px;}
+  .funnel-step .lbl{font-family:var(--mono); font-size:9px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); margin-top:6px;}
+  .funnel-step .pct{font-family:var(--mono); font-size:10px; color:var(--oxide); margin-top:4px;}
+  .funnel-arrow{display:flex; align-items:center; color:var(--muted); font-size:14px; padding:0 4px;}
+  @media(max-width:700px){ .funnel{flex-direction:column;} .funnel-arrow{display:none;} }
+
+  .chart-bars{display:flex; align-items:flex-end; gap:6px; height:110px; border-bottom:1px solid var(--line);}
+  .chart-bar-wrap{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; gap:6px;}
+  .chart-bar{width:100%; max-width:22px; background:var(--oxide); min-height:2px;}
+  .chart-bar-label{font-family:var(--mono); font-size:9px; color:var(--muted); white-space:nowrap;}
+
+  .activity-list{display:flex; flex-direction:column; gap:1px; background:var(--line);}
+  .activity-row{background:var(--bg); padding:13px 16px; display:flex; justify-content:space-between; gap:12px; font-size:13px;}
+  .activity-row .txt span{color:var(--muted);}
+  .activity-row .time{font-family:var(--mono); font-size:10px; color:var(--muted); white-space:nowrap;}
+
+  /* ---------- CATALOG CARDS ---------- */
+  .cat-grid{display:flex; flex-direction:column; gap:1px; background:var(--line);}
+  .cat-card{background:var(--bg); padding:24px; display:grid; grid-template-columns:200px 1fr; gap:24px;}
+  @media(max-width:700px){ .cat-card{grid-template-columns:1fr;} }
+  .cat-photo-frame{width:200px; height:250px; overflow:hidden; background:#1a1a17; border:1px solid var(--line); position:relative;}
+  .cat-photo-frame img{width:100%; height:100%; object-fit:cover;}
+  .cat-photo-wrap{display:flex; flex-direction:column; gap:10px;}
+  .cat-photo-wrap input[type=file]{font-size:11px; font-family:var(--mono); color:var(--muted);}
+  .pos-sliders{display:flex; flex-direction:column; gap:6px;}
+  .pos-sliders label{font-family:var(--mono); font-size:9px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); display:flex; justify-content:space-between;}
+  .pos-sliders input[type=range]{width:100%; accent-color:var(--oxide);}
+  .stock-toggle{
+    display:flex; align-items:center; gap:8px; border:1px solid var(--line); padding:8px 10px; cursor:pointer;
+    font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.04em;
+  }
+  .stock-toggle .dot{width:7px; height:7px; border-radius:50%; background:var(--ok);}
+  .stock-toggle.sold-out .dot{background:var(--oxide);}
+  .cat-fields{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  .cat-fields .full{grid-column:1/-1;}
+  .field-label{font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:4px; display:block;}
+  .cat-fields input, .cat-fields textarea{
+    width:100%; background:var(--card); border:1px solid var(--line); outline:none;
+    font-family:var(--sans); font-size:13px; color:var(--ink); padding:8px 10px;
+  }
+  .cat-fields input:focus, .cat-fields textarea:focus{border-color:var(--ink);}
+  .cat-fields textarea{resize:vertical; min-height:56px;}
+  .cat-fields label.chk{display:flex; align-items:center; gap:8px; font-size:12px; font-family:var(--mono);}
+  .cat-save-row{grid-column:1/-1; display:flex; align-items:center; gap:12px; margin-top:4px;}
+  .cat-save-row button{
+    background:var(--ink); color:var(--bg); border:none; padding:9px 18px;
+    font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.06em; cursor:pointer;
+  }
+  .cat-save-row button:hover{background:var(--oxide); color:#fff;}
+  .cat-save-row .status{font-family:var(--mono); font-size:11px; color:var(--muted);}
+  .cat-save-row .status.ok{color:var(--ok);}
+  .cat-save-row .status.err{color:var(--oxide);}
+
+  /* ---------- LEADS (merged: quiz / newsletter / access) ---------- */
+  .subtabs{display:flex; gap:8px; margin-bottom:24px;}
+  .subtab-btn{
+    background:none; border:1px solid var(--line); color:var(--muted); padding:8px 16px; cursor:pointer;
+    font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.04em;
+  }
+  .subtab-btn.active{color:var(--ink); border-color:var(--ink);}
+  .subpanel{display:none;}
+  .subpanel.active{display:block;}
+
+  /* ---------- TABLES ---------- */
+  .toolbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; gap:12px; flex-wrap:wrap;}
+  .toolbar button{
+    background:none; border:1px solid var(--ink); color:var(--ink); padding:8px 16px;
+    font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.05em; cursor:pointer;
+  }
+  .toolbar button:hover{background:var(--ink); color:var(--bg);}
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th{
+    text-align:left; font-family:var(--mono); font-size:10px; text-transform:uppercase;
+    letter-spacing:.05em; color:var(--muted); padding:10px 12px; border-bottom:1px solid var(--ink);
+  }
+  td{padding:12px; border-bottom:1px solid var(--line); vertical-align:top;}
+  tr:hover td{background:rgba(243,240,232,.02);}
+  td button{
+    background:none; border:1px solid var(--line); color:var(--ink); padding:4px 10px;
+    font-family:var(--mono); font-size:10px; text-transform:uppercase; cursor:pointer;
+  }
+  td button:hover{border-color:var(--oxide); color:var(--oxide);}
+  .status-pill{font-family:var(--mono); font-size:10px; text-transform:uppercase; padding:3px 8px; border:1px solid var(--ok); color:var(--ok); display:inline-block;}
+  .status-pill.disabled{border-color:var(--muted); color:var(--muted);}
+
+  /* ---------- REFERRAL FORM ---------- */
+  .ref-form{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:28px; align-items:end;}
+  @media(max-width:800px){ .ref-form{grid-template-columns:1fr 1fr;} }
+  .ref-form input{
+    width:100%; background:var(--card); border:1px solid var(--line); outline:none;
+    font-family:var(--sans); font-size:13px; color:var(--ink); padding:9px 10px;
+  }
+  .ref-form input:focus{border-color:var(--ink);}
+  .ref-form button{
+    background:var(--ink); color:var(--bg); border:none; padding:10px 16px;
+    font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.06em; cursor:pointer;
+  }
+  .ref-form button:hover{background:var(--oxide); color:#fff;}
+
+  /* ---------- CLICK STATS BARS ---------- */
+  .stat-row{margin-bottom:18px;}
+  .stat-head{display:flex; justify-content:space-between; font-size:13px; margin-bottom:6px;}
+  .stat-head b{font-family:var(--display);}
+  .stat-head span{font-family:var(--mono); font-size:11px; color:var(--muted);}
+  .stat-bar-track{height:8px; background:var(--line); position:relative; overflow:hidden;}
+  .stat-bar-fill{height:100%; background:var(--oxide);}
+  .stat-breakdown{font-family:var(--mono); font-size:10px; color:var(--muted); margin-top:4px;}
+
+  .empty-note{font-family:var(--mono); font-size:12px; color:var(--muted); padding:40px 0; text-align:center;}
+  .loading-note{font-family:var(--mono); font-size:12px; color:var(--muted); padding:20px 0;}
+</style>
+</head>
+<body>
+
+<div id="configWarning">
+  BACKEND CONFIG belum diisi — buka file ini, isi SUPABASE_URL &amp; SUPABASE_ANON_KEY di bagian atas script.
+</div>
+
+<div id="loginScreen">
+  <div class="login-box">
+    <h1>duftlab</h1>
+    <div class="sub">Admin Access</div>
+    <input type="email" id="loginEmail" placeholder="Email" autocomplete="username">
+    <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
+    <button id="loginBtn">Log In</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<div id="adminShell">
+  <header>
+    <div class="logo">duft<span>lab</span> — admin</div>
+    <button id="logoutBtn">Log Out</button>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="overview">Overview</button>
+    <button class="tab-btn" data-tab="catalog">Catalog</button>
+    <button class="tab-btn" data-tab="leads">Leads</button>
+    <button class="tab-btn" data-tab="clicks">Click Stats</button>
+    <button class="tab-btn" data-tab="referral">Referral Codes</button>
+  </div>
+
+  <main>
+    <!-- OVERVIEW -->
+    <div class="panel active" id="panel-overview">
+      <div class="range-picker" id="rangePicker">
+        <button class="range-btn" data-range="today">Today</button>
+        <button class="range-btn active" data-range="7d">7 Days</button>
+        <button class="range-btn" data-range="30d">30 Days</button>
+        <button class="range-btn" data-range="all">All Time</button>
+      </div>
+
+      <div class="loading-note" id="overviewLoading">Loading…</div>
+      <div id="overviewContent" style="display:none;">
+        <div class="stat-grid">
+          <div class="stat-card" data-jump="catalog"><div class="num" id="statVisits">0</div><div class="lbl">Site Visits</div></div>
+          <div class="stat-card" data-jump="leads"><div class="num" id="statLeads">0</div><div class="lbl">Quiz Leads</div></div>
+          <div class="stat-card" data-jump="leads"><div class="num" id="statNewsletter">0</div><div class="lbl">Newsletter Subs</div></div>
+          <div class="stat-card" data-jump="clicks"><div class="num" id="statClicks">0</div><div class="lbl">Product Interactions</div></div>
+        </div>
+
+        <div class="section-h">Funnel</div>
+        <div class="funnel">
+          <div class="funnel-step"><div class="num" id="fnVisits">0</div><div class="lbl">Visits</div></div>
+          <div class="funnel-arrow">→</div>
+          <div class="funnel-step"><div class="num" id="fnQuizStart">0</div><div class="lbl">Quiz Started</div><div class="pct" id="fnQuizStartPct"></div></div>
+          <div class="funnel-arrow">→</div>
+          <div class="funnel-step"><div class="num" id="fnQuizDone">0</div><div class="lbl">Quiz Completed</div><div class="pct" id="fnQuizDonePct"></div></div>
+          <div class="funnel-arrow">→</div>
+          <div class="funnel-step"><div class="num" id="fnShopee">0</div><div class="lbl">Clicked Buy</div><div class="pct" id="fnShopeePct"></div></div>
+        </div>
+
+        <div class="section-h">Recent Activity</div>
+        <div class="activity-list" id="activityList"></div>
+
+        <div class="section-h">Visits — Trend</div>
+        <div id="chartVisits"></div>
+      </div>
+    </div>
+
+    <!-- CATALOG -->
+    <div class="panel" id="panel-catalog">
+      <div class="loading-note" id="catalogLoading">Loading catalog…</div>
+      <div class="cat-grid" id="catalogGrid"></div>
+    </div>
+
+    <!-- LEADS (merged) -->
+    <div class="panel" id="panel-leads">
+      <div class="subtabs">
+        <button class="subtab-btn active" data-sub="quiz">Quiz Leads</button>
+        <button class="subtab-btn" data-sub="newsletter">Newsletter</button>
+        <button class="subtab-btn" data-sub="access">Access Requests</button>
+      </div>
+
+      <div class="subpanel active" id="sub-quiz">
+        <div class="toolbar"><div class="loading-note" id="leadsCount">Loading…</div><button id="exportLeadsBtn">Export CSV</button></div>
+        <table><thead><tr><th>Name</th><th>Instagram</th><th>Email</th><th>Matched</th><th>Date</th></tr></thead>
+        <tbody id="leadsBody"></tbody></table>
+      </div>
+      <div class="subpanel" id="sub-newsletter">
+        <div class="toolbar"><div class="loading-note" id="newsletterCount">Loading…</div><button id="exportNewsletterBtn">Export CSV</button></div>
+        <table><thead><tr><th>Email</th><th>Subscribed</th></tr></thead>
+        <tbody id="newsletterBody"></tbody></table>
+      </div>
+      <div class="subpanel" id="sub-access">
+        <div class="toolbar"><div class="loading-note" id="accessCount">Loading…</div><button id="exportAccessBtn">Export CSV</button></div>
+        <table><thead><tr><th>Email</th><th>Product</th><th>Date</th></tr></thead>
+        <tbody id="accessBody"></tbody></table>
+      </div>
+    </div>
+
+    <!-- CLICK STATS -->
+    <div class="panel" id="panel-clicks">
+      <div class="loading-note" id="clicksLoading">Loading…</div>
+      <div id="clicksList"></div>
+    </div>
+
+    <!-- REFERRAL CODES -->
+    <div class="panel" id="panel-referral">
+      <div class="ref-form">
+        <input id="refCode" placeholder="CODE (e.g. RAI10)">
+        <input id="refOwner" placeholder="Owner / creator name">
+        <input id="refNote" placeholder="Discount note (e.g. 10% off)">
+        <button id="refAddBtn">Add Code</button>
+      </div>
+      <div class="loading-note" id="referralLoading">Loading…</div>
+      <table><thead><tr><th>Code</th><th>Owner</th><th>Discount</th><th>Status</th><th>Times Used</th><th></th></tr></thead>
+      <tbody id="referralBody"></tbody></table>
+    </div>
+  </main>
+</div>
+
+<script>
+/* ============================================================
+   BACKEND CONFIG
+   ============================================================ */
+const SUPABASE_URL      = 'https://msjwbkhqsgmuxhrxrsgl.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_eAWXRiXohQc9OmY5GuMilg_43XE1--u';
+
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY){
+  document.getElementById('configWarning').style.display = 'block';
+}
+const sb = (SUPABASE_URL && SUPABASE_ANON_KEY) ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+/* ---------- LOGIN ---------- */
+const loginScreen = document.getElementById('loginScreen');
+const adminShell = document.getElementById('adminShell');
+const loginError = document.getElementById('loginError');
+
+document.getElementById('loginBtn').addEventListener('click', doLogin);
+document.getElementById('loginPassword').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+async function doLogin(){
+  if (!sb){ loginError.textContent = 'Backend belum dikonfigurasi.'; return; }
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  loginError.textContent = '';
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  if (error){ loginError.textContent = error.message; return; }
+  showAdmin();
+}
+document.getElementById('logoutBtn').addEventListener('click', async () => { await sb.auth.signOut(); location.reload(); });
+async function checkSession(){ if (!sb) return; const { data } = await sb.auth.getSession(); if (data.session) showAdmin(); }
+
+function showAdmin(){
+  loginScreen.style.display = 'none';
+  adminShell.style.display = 'block';
+  loadOverview('7d');
+  loadCatalog();
+  loadLeads();
+  loadNewsletter();
+  loadAccessRequests();
+  loadReferralCodes();
+  loadClicks();
+}
+
+/* ---------- TOP-LEVEL TABS ---------- */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => activateTab(btn.dataset.tab));
+});
+function activateTab(tab){
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + tab).classList.add('active');
+}
+document.querySelectorAll('.stat-card[data-jump]').forEach(card => {
+  card.addEventListener('click', () => activateTab(card.dataset.jump));
+});
+
+/* ---------- LEADS SUB-TABS ---------- */
+document.querySelectorAll('.subtab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.subtab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.subpanel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('sub-' + btn.dataset.sub).classList.add('active');
+  });
+});
+
+function esc(v){ return (v || '').toString().replace(/"/g, '&quot;'); }
+function fmtDate(d){ return new Date(d).toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' }); }
+function fmtDateTime(d){ return new Date(d).toLocaleString('id-ID', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }); }
+
+function downloadCSV(filename, rows, headers){
+  const csv = [headers.join(',')].concat(
+    rows.map(r => headers.map(h => `"${(r[h] || '').toString().replace(/"/g, '""')}"`).join(','))
+  ).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+}
+
+/* ---------- TIME RANGE HELPER ---------- */
+function rangeStartISO(range){
+  const now = new Date();
+  if (range === 'today'){ now.setHours(0,0,0,0); return now.toISOString(); }
+  if (range === '7d'){ now.setDate(now.getDate() - 7); return now.toISOString(); }
+  if (range === '30d'){ now.setDate(now.getDate() - 30); return now.toISOString(); }
+  return null; // 'all'
+}
+function applyRange(query, range, field){
+  const start = rangeStartISO(range);
+  return start ? query.gte(field, start) : query;
+}
+
+/* ---------- CHART HELPER ---------- */
+function groupByDay(rows, dateField, days){
+  const buckets = {};
+  const now = new Date();
+  for (let i = days - 1; i >= 0; i--){
+    const d = new Date(now); d.setDate(d.getDate() - i);
+    buckets[d.toISOString().slice(0,10)] = 0;
+  }
+  rows.forEach(r => {
+    const key = new Date(r[dateField]).toISOString().slice(0,10);
+    if (key in buckets) buckets[key]++;
+  });
+  return buckets;
+}
+function renderBarChart(containerId, buckets){
+  const el = document.getElementById(containerId);
+  const keys = Object.keys(buckets);
+  const values = keys.map(k => buckets[k]);
+  const max = Math.max(1, ...values);
+  el.innerHTML = `<div class="chart-bars">` + keys.map((k, i) => {
+    const h = Math.max(2, Math.round(values[i] / max * 100));
+    const label = k.slice(5).replace('-', '/');
+    return `<div class="chart-bar-wrap" title="${k}: ${values[i]}">
+      <div class="chart-bar" style="height:${h}%"></div>
+      <div class="chart-bar-label">${label}</div>
+    </div>`;
+  }).join('') + `</div>`;
+}
+function pct(part, whole){ return whole ? Math.round(part / whole * 100) + '%' : '–'; }
+
+/* ---------- OVERVIEW ---------- */
+let currentRange = '7d';
+document.querySelectorAll('.range-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.range-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentRange = btn.dataset.range;
+    loadOverview(currentRange);
+  });
+});
+
+async function loadOverview(range){
+  const loading = document.getElementById('overviewLoading');
+  const content = document.getElementById('overviewContent');
+  loading.style.display = 'block';
+  content.style.display = 'none';
+
+  const [funnelRes, leadsRes, newsRes, clicksRes, eventsRes] = await Promise.all([
+    applyRange(sb.from('funnel_events').select('*'), range, 'created_at'),
+    applyRange(sb.from('quiz_leads').select('*'), range, 'created_at'),
+    applyRange(sb.from('newsletter_subscribers').select('*'), range, 'created_at'),
+    sb.from('product_clicks').select('*'),
+    applyRange(sb.from('click_events').select('*'), range, 'created_at')
+  ]);
+  loading.style.display = 'none';
+  content.style.display = 'block';
+
+  const funnelRows = funnelRes.data || [];
+  const visits = funnelRows.filter(r => r.event_type === 'page_view').length;
+  const quizStarts = funnelRows.filter(r => r.event_type === 'quiz_started').length;
+  const leadsCount = (leadsRes.data || []).length;
+  const newsCount = (newsRes.data || []).length;
+  const shopeeClicks = (eventsRes.data || []).filter(r => r.click_type === 'add_to_bag').length;
+
+  document.getElementById('statVisits').textContent = visits;
+  document.getElementById('statLeads').textContent = leadsCount;
+  document.getElementById('statNewsletter').textContent = newsCount;
+
+  const clicks = clicksRes.data || [];
+  const totalInteractions = clicks.reduce((s, d) => s + (d.view_count||0)+(d.add_to_bag_count||0)+(d.request_access_count||0), 0);
+  document.getElementById('statClicks').textContent = totalInteractions;
+
+  document.getElementById('fnVisits').textContent = visits;
+  document.getElementById('fnQuizStart').textContent = quizStarts;
+  document.getElementById('fnQuizStartPct').textContent = pct(quizStarts, visits);
+  document.getElementById('fnQuizDone').textContent = leadsCount;
+  document.getElementById('fnQuizDonePct').textContent = pct(leadsCount, quizStarts);
+  document.getElementById('fnShopee').textContent = shopeeClicks;
+  document.getElementById('fnShopeePct').textContent = pct(shopeeClicks, leadsCount);
+
+  renderBarChart('chartVisits', groupByDay(funnelRows.filter(r => r.event_type === 'page_view'), 'created_at', range === '30d' ? 30 : 14));
+
+  renderActivityFeed(leadsRes.data || [], newsRes.data || [], eventsRes.data || []);
+}
+
+async function renderActivityFeed(leads, subs, events){
+  const accessRes = await applyRange(sb.from('access_requests').select('*'), currentRange, 'created_at');
+  const items = [
+    ...leads.map(l => ({ time: l.created_at, txt: `New quiz lead — <b>${esc(l.name)}</b> matched <span>${esc(l.matched_specimen)}</span>` })),
+    ...subs.map(s => ({ time: s.created_at, txt: `New subscriber — <span>${esc(s.email)}</span>` })),
+    ...(accessRes.data || []).map(a => ({ time: a.created_at, txt: `Access request — <span>${esc(a.email)} for ${esc(a.product_name)}</span>` })),
+    ...events.filter(e => e.click_type === 'add_to_bag').map(e => ({ time: e.created_at, txt: `Clicked buy — <span>${esc(e.product_name || e.product_id)}</span>` }))
+  ];
+  items.sort((a,b) => new Date(b.time) - new Date(a.time));
+  const top = items.slice(0, 10);
+  document.getElementById('activityList').innerHTML = top.map(i => `
+    <div class="activity-row"><div class="txt">${i.txt}</div><div class="time">${fmtDateTime(i.time)}</div></div>
+  `).join('') || '<div class="empty-note">Belum ada aktivitas di periode ini.</div>';
+}
+
+/* ---------- CATALOG ---------- */
+async function loadCatalog(){
+  const grid = document.getElementById('catalogGrid');
+  const loading = document.getElementById('catalogLoading');
+  const { data, error } = await sb.from('catalog_items').select('*').order('sort_order');
+  loading.style.display = 'none';
+  if (error){ grid.innerHTML = `<div class="empty-note">Gagal load katalog: ${error.message}</div>`; return; }
+  if (!data.length){ grid.innerHTML = `<div class="empty-note">Belum ada data.</div>`; return; }
+  grid.innerHTML = '';
+  data.forEach(item => grid.appendChild(renderCatalogCard(item)));
+}
+
+function renderCatalogCard(item){
+  const card = document.createElement('div');
+  card.className = 'cat-card';
+  const isSoldOut = (item.stock || '').toLowerCase().includes('sold');
+  const pos = (item.photo_position || '50% 50%').split(' ');
+  const posX = parseInt(pos[0]) || 50;
+  const posY = parseInt(pos[1]) || 50;
+  card.innerHTML = `
+    <div class="cat-photo-wrap">
+      <div class="cat-photo-frame"><img class="cat-photo" src="${item.photo_url || ''}" alt="${item.name || item.n}" style="object-position:${posX}% ${posY}%" onerror="this.style.opacity=0.2"></div>
+      <input type="file" accept="image/*" class="photo-input">
+      <div class="pos-sliders">
+        <label>Horizontal focus <span class="posx-val">${posX}%</span></label>
+        <input type="range" min="0" max="100" value="${posX}" class="pos-x-slider">
+        <label>Vertical focus <span class="posy-val">${posY}%</span></label>
+        <input type="range" min="0" max="100" value="${posY}" class="pos-y-slider">
+      </div>
+      <div class="stock-toggle ${isSoldOut ? 'sold-out' : ''}"><span class="dot"></span><span class="stock-label">${isSoldOut ? 'Sold Out' : 'Available'} (click to toggle)</span></div>
+    </div>
+    <div class="cat-fields">
+      <div class="full"><span class="field-label">Index — ${item.n} (${item.series})</span></div>
+      <div><span class="field-label">Name</span><input data-f="name" value="${esc(item.name)}"></div>
+      <div><span class="field-label">Price</span><input data-f="price" value="${esc(item.price)}"></div>
+      <div><span class="field-label">Size</span><input data-f="size" value="${esc(item.size)}"></div>
+      <div><span class="field-label">Type</span><input data-f="type" value="${esc(item.type)}"></div>
+      <div><span class="field-label">Stock</span><input data-f="stock" value="${esc(item.stock)}"></div>
+      <div><label class="chk"><input type="checkbox" data-f="coming_soon" ${item.coming_soon ? 'checked' : ''}> Coming Soon</label></div>
+      <div class="full"><span class="field-label">Shopee Link</span><input data-f="shopee_url" value="${esc(item.shopee_url)}" placeholder="https://shopee.co.id/..."></div>
+      <div><span class="field-label">Share Card — Tagline</span><input data-f="share_tagline" value="${esc(item.share_tagline)}" placeholder="For the one who..."></div>
+      <div><span class="field-label">Share Card — Mood</span><input data-f="share_mood" value="${esc(item.share_mood)}" placeholder="Bold · Warm Wood · Unresolved"></div>
+      <div class="full"><span class="field-label">Tagline</span><input data-f="line" value="${esc(item.line)}"></div>
+      <div class="full"><span class="field-label">Description</span><textarea data-f="desc">${esc(item.desc)}</textarea></div>
+      <div><span class="field-label">Top Notes</span><input data-f="notes_top" value="${esc(item.notes_top)}"></div>
+      <div><span class="field-label">Mid Notes</span><input data-f="notes_mid" value="${esc(item.notes_mid)}"></div>
+      <div><span class="field-label">Base Notes</span><input data-f="notes_base" value="${esc(item.notes_base)}"></div>
+      <div class="cat-save-row"><button class="save-btn">Save Changes</button><span class="status"></span></div>
+    </div>
+  `;
+
+  const photoImg = card.querySelector('.cat-photo');
+  const fileInput = card.querySelector('.photo-input');
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files[0];
+    if (file) photoImg.src = URL.createObjectURL(file);
+  });
+
+  const posXSlider = card.querySelector('.pos-x-slider');
+  const posYSlider = card.querySelector('.pos-y-slider');
+  posXSlider.addEventListener('input', () => {
+    card.querySelector('.posx-val').textContent = posXSlider.value + '%';
+    photoImg.style.objectPosition = `${posXSlider.value}% ${posYSlider.value}%`;
+  });
+  posYSlider.addEventListener('input', () => {
+    card.querySelector('.posy-val').textContent = posYSlider.value + '%';
+    photoImg.style.objectPosition = `${posXSlider.value}% ${posYSlider.value}%`;
+  });
+
+  card.querySelector('.save-btn').addEventListener('click', () => saveCatalogItem(item.n, card));
+  card.querySelector('.stock-toggle').addEventListener('click', () => quickToggleStock(item.n, card));
+  return card;
+}
+
+async function quickToggleStock(n, card){
+  const toggle = card.querySelector('.stock-toggle');
+  const stockInput = card.querySelector('[data-f="stock"]');
+  const isSoldOut = toggle.classList.contains('sold-out');
+  const newStock = isSoldOut ? 'Available' : 'Sold Out';
+  const { error } = await sb.from('catalog_items').update({ stock: newStock }).eq('n', n);
+  if (error){ alert('Gagal update stock: ' + error.message); return; }
+  toggle.classList.toggle('sold-out');
+  toggle.querySelector('.stock-label').textContent = `${newStock} (click to toggle)`;
+  stockInput.value = newStock;
+}
+
+async function saveCatalogItem(n, card){
+  const status = card.querySelector('.status');
+  status.className = 'status'; status.textContent = 'Saving…';
+  const updates = {};
+  card.querySelectorAll('[data-f]').forEach(el => { updates[el.dataset.f] = el.type === 'checkbox' ? el.checked : el.value; });
+
+  const posX = card.querySelector('.pos-x-slider').value;
+  const posY = card.querySelector('.pos-y-slider').value;
+  updates.photo_position = `${posX}% ${posY}%`;
+
+  const file = card.querySelector('.photo-input').files[0];
+  if (file){
+    const ext = file.name.split('.').pop();
+    const path = `${n}-${Date.now()}.${ext}`;
+    const { error: uploadError } = await sb.storage.from('catalog-photos').upload(path, file, { upsert: true });
+    if (uploadError){ status.className = 'status err'; status.textContent = 'Upload gagal: ' + uploadError.message; return; }
+    const { data: pub } = sb.storage.from('catalog-photos').getPublicUrl(path);
+    updates.photo_url = pub.publicUrl;
+    card.querySelector('.cat-photo').src = pub.publicUrl;
+  }
+  const { error } = await sb.from('catalog_items').update(updates).eq('n', n);
+  if (error){ status.className = 'status err'; status.textContent = 'Gagal: ' + error.message; }
+  else {
+    status.className = 'status ok'; status.textContent = 'Tersimpan ✓';
+    setTimeout(() => { status.textContent = ''; status.className = 'status'; }, 2500);
+  }
+}
+
+/* ---------- QUIZ LEADS ---------- */
+let leadsCache = [];
+async function loadLeads(){
+  const countEl = document.getElementById('leadsCount');
+  const body = document.getElementById('leadsBody');
+  const { data, error } = await sb.from('quiz_leads').select('*').order('created_at', { ascending: false });
+  if (error){ countEl.textContent = 'Gagal load: ' + error.message; return; }
+  leadsCache = data;
+  countEl.textContent = `${data.length} responses`;
+  body.innerHTML = data.map(l => `<tr><td>${esc(l.name)}</td><td>${esc(l.instagram)}</td><td>${esc(l.email)}</td><td>${esc(l.matched_specimen)}</td><td>${fmtDate(l.created_at)}</td></tr>`).join('')
+    || '<tr><td colspan="5" class="empty-note">Belum ada yang isi quiz.</td></tr>';
+}
+document.getElementById('exportLeadsBtn').addEventListener('click', () => {
+  if (!leadsCache.length) return;
+  downloadCSV(`duftlab-quiz-leads-${new Date().toISOString().slice(0,10)}.csv`, leadsCache, ['name','instagram','email','matched_specimen','created_at']);
+});
+
+/* ---------- NEWSLETTER ---------- */
+let newsletterCache = [];
+async function loadNewsletter(){
+  const countEl = document.getElementById('newsletterCount');
+  const body = document.getElementById('newsletterBody');
+  const { data, error } = await sb.from('newsletter_subscribers').select('*').order('created_at', { ascending: false });
+  if (error){ countEl.textContent = 'Gagal load: ' + error.message; return; }
+  newsletterCache = data;
+  countEl.textContent = `${data.length} subscribers`;
+  body.innerHTML = data.map(l => `<tr><td>${esc(l.email)}</td><td>${fmtDate(l.created_at)}</td></tr>`).join('')
+    || '<tr><td colspan="2" class="empty-note">Belum ada subscriber.</td></tr>';
+}
+document.getElementById('exportNewsletterBtn').addEventListener('click', () => {
+  if (!newsletterCache.length) return;
+  downloadCSV(`duftlab-newsletter-${new Date().toISOString().slice(0,10)}.csv`, newsletterCache, ['email','created_at']);
+});
+
+/* ---------- ACCESS REQUESTS ---------- */
+let accessCache = [];
+async function loadAccessRequests(){
+  const countEl = document.getElementById('accessCount');
+  const body = document.getElementById('accessBody');
+  const { data, error } = await sb.from('access_requests').select('*').order('created_at', { ascending: false });
+  if (error){ countEl.textContent = 'Gagal load: ' + error.message; return; }
+  accessCache = data;
+  countEl.textContent = `${data.length} requests`;
+  body.innerHTML = data.map(l => `<tr><td>${esc(l.email)}</td><td>${esc(l.product_name)}</td><td>${fmtDate(l.created_at)}</td></tr>`).join('')
+    || '<tr><td colspan="3" class="empty-note">Belum ada request.</td></tr>';
+}
+document.getElementById('exportAccessBtn').addEventListener('click', () => {
+  if (!accessCache.length) return;
+  downloadCSV(`duftlab-access-requests-${new Date().toISOString().slice(0,10)}.csv`, accessCache, ['email','product_name','created_at']);
+});
+
+/* ---------- REFERRAL CODES ---------- */
+async function loadReferralCodes(){
+  const loading = document.getElementById('referralLoading');
+  const body = document.getElementById('referralBody');
+  const { data, error } = await sb.from('referral_codes').select('*').order('created_at', { ascending: false });
+  loading.style.display = 'none';
+  if (error){ body.innerHTML = `<tr><td colspan="6" class="empty-note">Gagal load: ${error.message}</td></tr>`; return; }
+  renderReferralTable(data);
+}
+function renderReferralTable(data){
+  const body = document.getElementById('referralBody');
+  body.innerHTML = data.map(r => `
+    <tr>
+      <td><b>${esc(r.code)}</b></td>
+      <td>${esc(r.owner_name)}</td>
+      <td>${esc(r.discount_note)}</td>
+      <td><span class="status-pill ${r.status === 'disabled' ? 'disabled' : ''}">${r.status}</span></td>
+      <td>${r.times_used} <button data-act="increment" data-code="${esc(r.code)}">+1</button></td>
+      <td>
+        <button data-act="toggle" data-code="${esc(r.code)}">${r.status === 'active' ? 'Disable' : 'Enable'}</button>
+        <button data-act="delete" data-code="${esc(r.code)}">Delete</button>
+      </td>
+    </tr>
+  `).join('') || '<tr><td colspan="6" class="empty-note">Belum ada referral code.</td></tr>';
+
+  body.querySelectorAll('button[data-act]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const code = btn.dataset.code, act = btn.dataset.act;
+      if (act === 'increment'){
+        const row = data.find(r => r.code === code);
+        await sb.from('referral_codes').update({ times_used: row.times_used + 1 }).eq('code', code);
+      } else if (act === 'toggle'){
+        const row = data.find(r => r.code === code);
+        await sb.from('referral_codes').update({ status: row.status === 'active' ? 'disabled' : 'active' }).eq('code', code);
+      } else if (act === 'delete'){
+        if (!confirm(`Hapus kode ${code}?`)) return;
+        await sb.from('referral_codes').delete().eq('code', code);
+      }
+      loadReferralCodes();
+    });
+  });
+}
+document.getElementById('refAddBtn').addEventListener('click', async () => {
+  const code = document.getElementById('refCode').value.trim().toUpperCase();
+  const owner_name = document.getElementById('refOwner').value.trim();
+  const discount_note = document.getElementById('refNote').value.trim();
+  if (!code){ alert('Isi kode dulu.'); return; }
+  const { error } = await sb.from('referral_codes').insert([{ code, owner_name, discount_note }]);
+  if (error){ alert('Gagal: ' + error.message); return; }
+  document.getElementById('refCode').value = '';
+  document.getElementById('refOwner').value = '';
+  document.getElementById('refNote').value = '';
+  loadReferralCodes();
+});
+
+/* ---------- CLICK STATS ---------- */
+async function loadClicks(){
+  const loading = document.getElementById('clicksLoading');
+  const list = document.getElementById('clicksList');
+  const { data, error } = await sb.from('product_clicks').select('*');
+  loading.style.display = 'none';
+  if (error){ list.innerHTML = `<div class="empty-note">Gagal load: ${error.message}</div>`; return; }
+  if (!data.length){ list.innerHTML = '<div class="empty-note">Belum ada klik tercatat.</div>'; return; }
+  const withTotal = data.map(d => ({ ...d, total: (d.view_count||0)+(d.add_to_bag_count||0)+(d.request_access_count||0) }));
+  withTotal.sort((a,b) => b.total - a.total);
+  const max = withTotal[0].total || 1;
+  list.innerHTML = withTotal.map(d => `
+    <div class="stat-row">
+      <div class="stat-head"><b>${esc(d.product_name || d.product_id)}</b><span>${d.total} interactions</span></div>
+      <div class="stat-bar-track"><div class="stat-bar-fill" style="width:${(d.total/max*100).toFixed(0)}%"></div></div>
+      <div class="stat-breakdown">Views: ${d.view_count||0} · Add to Bag: ${d.add_to_bag_count||0} · Request Access: ${d.request_access_count||0}</div>
+    </div>
+  `).join('');
+}
+
+checkSession();
+</script>
+</body>
+</html>
