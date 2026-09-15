@@ -1801,6 +1801,30 @@ async function initCatalogCMS(){
   renderCatalogGrid(all);
 }
 
+/* ---- CMS: QUIZ QUESTIONS FROM SUPABASE ----
+   (Managed from admin.html → Quiz tab.) Falls back to the built-in
+   quizQuestions array above if the tables are empty/unreachable. */
+async function loadQuizFromSupabase(){
+  if (!backendReady()) return;
+  try{
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/quiz_questions?select=id,question,sort_order,quiz_options(option_text,value,sort_order)&order=sort_order.asc`,
+      { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } }
+    );
+    if (!res.ok) throw new Error('Quiz fetch failed: ' + res.status);
+    const rows = await res.json();
+    if (!rows.length) return;
+    const rebuilt = rows.map(r => ({
+      q: r.question,
+      options: [...r.quiz_options]
+        .sort((a, b) => a.sort_order - b.sort_order)
+        .map(o => ({ t: o.option_text, v: o.value }))
+    })).filter(q => q.options.length > 0);
+    if (rebuilt.length) quizQuestions = rebuilt;
+  } catch(err){ console.warn('[Quiz CMS] falling back to built-in questions —', err); }
+}
+loadQuizFromSupabase();
+
 const degreeSeries = [
   { n:"C", series:"degree", name:"Celsius", color:"#0f1214", accent:"#8A9BA8", photo:"duftlab-celsius.jpg",
     price:"Rp 299.000", size:"100 mL", type:"Eau de Parfum", stock:"Available",
@@ -1895,6 +1919,13 @@ function boostAccent(hex){
   c.setHSL(hsl.h, Math.max(hsl.s, 0.78), 0.66);
   return c;
 }
+function deepenAccent(hex){
+  const c = new THREE.Color(hex);
+  const hsl = {};
+  c.getHSL(hsl);
+  c.setHSL(hsl.h, Math.max(hsl.s, 0.55), 0.32);
+  return c;
+}
 
 function initVoidField(canvas, initialColorHex){
   if (!window.THREE) throw new Error('THREE.js not loaded');
@@ -1929,6 +1960,7 @@ function initVoidField(canvas, initialColorHex){
   const dotTex = makeDotTexture();
 
   const COUNT = IS_SMALL ? 170 : 340;
+  const Y_SPREAD = IS_SMALL ? 0.95 : 0.5; // taller/narrower spread on portrait phones so the field fills the hero instead of sitting as a thin band
   const positions = new Float32Array(COUNT * 3);
   const basePositions = [];
   for (let i = 0; i < COUNT; i++){
@@ -1936,7 +1968,7 @@ function initVoidField(canvas, initialColorHex){
     const theta = Math.random() * Math.PI * 2;
     const phi = Math.acos((Math.random() * 2) - 1);
     const x = r * Math.sin(phi) * Math.cos(theta);
-    const y = r * Math.sin(phi) * Math.sin(theta) * 0.5;
+    const y = r * Math.sin(phi) * Math.sin(theta) * Y_SPREAD;
     const z = r * Math.cos(phi) - 6;
     positions[i*3] = x; positions[i*3+1] = y; positions[i*3+2] = z;
     basePositions.push({ x, y, z, speed: 0.15 + Math.random() * 0.3, offset: Math.random() * Math.PI * 2 });
@@ -1944,7 +1976,11 @@ function initVoidField(canvas, initialColorHex){
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
-  const color = boostAccent(initialColorHex);
+  let currentMode = 'dark';
+  let lastHex = initialColorHex;
+  function colorForMode(hex){ return currentMode === 'light' ? deepenAccent(hex) : boostAccent(hex); }
+
+  const color = colorForMode(initialColorHex);
   const mat = new THREE.PointsMaterial({
     size: 0.26, map: dotTex, transparent: true, depthWrite: false,
     color, blending: THREE.AdditiveBlending, opacity: 1
@@ -1976,7 +2012,7 @@ function initVoidField(canvas, initialColorHex){
       const pts = curve.getPoints(40);
       const g = new THREE.BufferGeometry().setFromPoints(pts);
       g.setDrawRange(0, 0);
-      const m = new THREE.LineBasicMaterial({ color: color.clone(), transparent: true, opacity: 0.45 });
+      const m = new THREE.LineBasicMaterial({ color: colorForMode(lastHex), transparent: true, opacity: 0.45 });
       const line = new THREE.Line(g, m);
       line.userData.fullCount = pts.length;
       line.userData.drawn = 0;
@@ -1987,7 +2023,14 @@ function initVoidField(canvas, initialColorHex){
   buildArcs();
 
   let targetColor = color.clone();
-  function setAccent(hex){ targetColor = boostAccent(hex); }
+  function setAccent(hex){ lastHex = hex; targetColor = colorForMode(hex); }
+  function setMode(mode){
+    currentMode = mode;
+    mat.blending = mode === 'light' ? THREE.NormalBlending : THREE.AdditiveBlending;
+    mat.opacity = mode === 'light' ? 0.92 : 1;
+    mat.needsUpdate = true;
+    targetColor = colorForMode(lastHex);
+  }
 
   let heroVisible = true;
   const heroIO = new IntersectionObserver(([e]) => { heroVisible = e.isIntersecting; }, { threshold: 0 });
@@ -2024,7 +2067,7 @@ function initVoidField(canvas, initialColorHex){
   resize();
   tick();
 
-  return { setAccent, rebuildArcs: buildArcs };
+  return { setAccent, rebuildArcs: buildArcs, setMode };
 }
 
 function setActive(i){
@@ -2044,8 +2087,10 @@ heroDetailBtn.addEventListener('click', () => openOverlay(compositions[activeInd
 function toggleHeroBg(){
   const body = document.body;
   const isLight = body.getAttribute('data-hero-bg') === 'light';
-  body.setAttribute('data-hero-bg', isLight ? 'dark' : 'light');
+  const newMode = isLight ? 'dark' : 'light';
+  body.setAttribute('data-hero-bg', newMode);
   document.getElementById('bgToggle').textContent = isLight ? 'BG: Dark' : 'BG: Light';
+  if (voidField) voidField.setMode(newMode);
 }
 
 /* iOS Safari ignores `overflow:hidden` on <body>, so modals need a position-fixed
@@ -2946,37 +2991,45 @@ if (!IS_TOUCH) document.querySelectorAll('.hero-info button').forEach(btn => {
 });
 
 /* ---- SCENT QUIZ ---- */
-const quizQuestions = [
+let quizQuestions = [
   { q:"How do you like to start something new?", options:[
-    {t:"With a hypothesis, not a plan", v:"Experimental"},
-    {t:"With an idea I haven't fully formed yet", v:"Conceptual"},
     {t:"By testing the temperature of the room first", v:"Celsius"},
     {t:"By jumping straight into the heat of it", v:"Fahrenheit"},
+    {t:"By quietly mapping out every move in advance", v:"Kelvin"},
+    {t:"By easing in, one small step at a time", v:"Reaumur"},
+    {t:"With a hypothesis, not a plan", v:"Experimental"},
+    {t:"With an idea I haven't fully formed yet", v:"Conceptual"},
   ]},
   { q:"Pick a texture that feels most like you.", options:[
-    {t:"Cold iron", v:"Experimental"},
-    {t:"Chalk dust", v:"Conceptual"},
+    {t:"Sun-warmed glass", v:"Celsius"},
+    {t:"Velvet", v:"Fahrenheit"},
     {t:"Polished steel", v:"Kelvin"},
     {t:"Damp moss", v:"Reaumur"},
+    {t:"Cold iron", v:"Experimental"},
+    {t:"Chalk dust", v:"Conceptual"},
   ]},
   { q:"Choose a state of mind.", options:[
-    {t:"Mid-trial, nothing resolved yet", v:"Experimental"},
+    {t:"Sharp and clear-headed", v:"Celsius"},
+    {t:"Radiant, impossible to ignore", v:"Fahrenheit"},
     {t:"Perfectly still, perfectly quiet", v:"Kelvin"},
     {t:"Slightly out of step with everyone else", v:"Reaumur"},
+    {t:"Mid-trial, nothing resolved yet", v:"Experimental"},
     {t:"An outline that resists finishing", v:"Conceptual"},
   ]},
   { q:"What's your ideal pace?", options:[
-    {t:"Iterative — trial, error, trial again", v:"Experimental"},
-    {t:"Slow and theatrical", v:"Fahrenheit"},
     {t:"Measured and precise", v:"Celsius"},
+    {t:"Slow and theatrical", v:"Fahrenheit"},
+    {t:"Unhurried, playing the long game", v:"Kelvin"},
     {t:"Patient, unbothered by trends", v:"Reaumur"},
+    {t:"Iterative — trial, error, trial again", v:"Experimental"},
+    {t:"Deliberate, one careful layer at a time", v:"Conceptual"},
   ]},
   { q:"If you had to disappear into a scent, you'd want to feel—", options:[
-    {t:"Unresolved", v:"Experimental"},
+    {t:"Clear", v:"Celsius"},
+    {t:"Warm", v:"Fahrenheit"},
     {t:"Weightless", v:"Kelvin"},
     {t:"Grounded", v:"Reaumur"},
-    {t:"Warm", v:"Fahrenheit"},
-    {t:"Clear", v:"Celsius"},
+    {t:"Unresolved", v:"Experimental"},
     {t:"Abstract", v:"Conceptual"},
   ]},
 ];
