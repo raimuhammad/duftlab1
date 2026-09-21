@@ -23,6 +23,7 @@
     --ease-soft: cubic-bezier(.22,.61,.36,1);
   }
   *{margin:0;padding:0;box-sizing:border-box;}
+  button, input, select, textarea{font-family:inherit;}
   html{scroll-behavior:smooth;}
   body{
     background-color:var(--paper);
@@ -549,7 +550,7 @@
   .quiz-lead-form{display:flex; flex-direction:column; gap:0; margin-bottom:16px;}
   .quiz-lead-form input{
     background:none; border:none; border-bottom:1px solid rgba(243,240,232,.2);
-    outline:none; font-family:var(--sans); font-size:15px; color:#F3F0E8;
+    outline:none; font-family:var(--sans); font-size:16px; color:#F3F0E8;
     padding:14px 2px; transition:border-color .2s ease;
   }
   .quiz-lead-form input::placeholder{color:rgba(243,240,232,.35);}
@@ -1075,7 +1076,7 @@
   }
   .foot-form input{
     flex:1; background:none; border:none; outline:none;
-    font-family:var(--sans); font-size:15px; color:var(--ink); padding:10px 0;
+    font-family:var(--sans); font-size:16px; color:var(--ink); padding:10px 0;
     min-width:0;
   }
   .foot-form input::placeholder{color:var(--muted);}
@@ -1683,7 +1684,6 @@
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 /* Series split:
@@ -2171,9 +2171,9 @@ function initRibbons(container){
 }
 function initRibbonFieldGL(canvas, hexColor){
   if (!window.THREE) throw new Error('THREE.js not loaded');
-  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: !IS_SMALL });
   if (!renderer.getContext()) throw new Error('WebGL context unavailable');
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, IS_SMALL ? 1.5 : 2));
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 50);
@@ -3214,6 +3214,20 @@ function restartQuiz(){
 }
 
 /* ---- STORY IMAGE GENERATION + SHARE ---- */
+let html2canvasLoading = null;
+function loadHtml2Canvas(){
+  if (window.html2canvas) return Promise.resolve();
+  if (html2canvasLoading) return html2canvasLoading;
+  html2canvasLoading = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+  return html2canvasLoading;
+}
+
 async function shareStory(c){
   const noteEl = document.getElementById('shareNote');
   noteEl.textContent = 'Preparing your story…';
@@ -3229,6 +3243,7 @@ async function shareStory(c){
   document.getElementById('scSpec').textContent = `Eau de Parfum · ${c.size}`;
 
   try{
+    await loadHtml2Canvas();
     const canvas = await html2canvas(document.getElementById('storyCard'), { useCORS:true, backgroundColor:null, width:1080, height:1920 });
     canvas.toBlob(async (blob) => {
       const file = new File([blob], `duftlab-${c.name.toLowerCase()}.png`, { type:'image/png' });
