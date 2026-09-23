@@ -277,14 +277,27 @@
         <button class="range-btn" data-range="all">All Time</button>
       </div>
 
-      <div style="border:1px solid var(--line); padding:16px 20px; margin-bottom:32px; display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
-        <div>
-          <div style="font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:4px;">Site Settings</div>
-          <div style="font-size:12px; color:var(--muted);">Hero variant text color (Celsius / Fahrenheit / etc. list) — pick a color that stays readable against your hero photo/background.</div>
+      <div style="border:1px solid var(--line); padding:16px 20px; margin-bottom:32px;">
+        <div style="font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:14px;">Site Settings — Hero</div>
+
+        <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:16px;">
+          <div style="flex:1; min-width:200px; font-size:12px; color:var(--muted);">Hero variant text color (Celsius / Fahrenheit / etc. list) — pick a color that stays readable against your hero background.</div>
+          <input type="color" id="heroTextColorInput" value="#F3F0E8" style="width:44px; height:32px; border:1px solid var(--line); background:none; cursor:pointer;">
         </div>
-        <input type="color" id="heroTextColorInput" value="#F3F0E8" style="width:44px; height:32px; border:1px solid var(--line); background:none; cursor:pointer; margin-left:auto;">
-        <button id="saveHeroColorBtn" style="background:var(--ink); color:var(--bg); border:none; padding:8px 16px; font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.05em; cursor:pointer;">Save</button>
-        <span class="status" id="heroColorStatus" style="font-family:var(--mono); font-size:11px; color:var(--muted);"></span>
+
+        <div style="display:flex; gap:16px; align-items:center; margin-bottom:10px;">
+          <label class="chk"><input type="radio" name="hero-bg-type" id="heroBgTypeAnimation" value="animation" checked> Particle Animation</label>
+          <label class="chk"><input type="radio" name="hero-bg-type" id="heroBgTypePhoto" value="photo"> Photo</label>
+        </div>
+        <div id="heroBgPhotoRow" style="display:none; gap:10px; align-items:center; margin-bottom:14px;">
+          <input type="file" accept="image/*" id="heroBgPhotoInput" style="flex:1;">
+          <img id="heroBgPhotoPreview" style="width:60px; height:34px; object-fit:cover; border:1px solid var(--line); display:none;">
+        </div>
+
+        <div style="display:flex; align-items:center; gap:12px;">
+          <button id="saveHeroSettingsBtn" style="background:var(--ink); color:var(--bg); border:none; padding:8px 16px; font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.05em; cursor:pointer;">Save Hero Settings</button>
+          <span class="status" id="heroColorStatus" style="font-family:var(--mono); font-size:11px; color:var(--muted);"></span>
+        </div>
       </div>
 
       <div class="loading-note" id="overviewLoading">Loading…</div>
@@ -421,16 +434,57 @@ function showAdmin(){
 }
 
 async function loadSiteSettings(){
-  const { data } = await sb.from('site_settings').select('*').eq('key', 'hero_text_color');
-  if (data && data.length && data[0].value){
-    document.getElementById('heroTextColorInput').value = data[0].value;
+  const { data } = await sb.from('site_settings').select('*');
+  const get = k => { const r = (data || []).find(x => x.key === k); return r ? r.value : null; };
+
+  const textColor = get('hero_text_color');
+  if (textColor) document.getElementById('heroTextColorInput').value = textColor;
+
+  const bgType = get('hero_bg_type') || 'animation';
+  document.getElementById('heroBgTypeAnimation').checked = bgType === 'animation';
+  document.getElementById('heroBgTypePhoto').checked = bgType === 'photo';
+  document.getElementById('heroBgPhotoRow').style.display = bgType === 'photo' ? 'flex' : 'none';
+
+  const photoUrl = get('hero_bg_photo_url');
+  if (photoUrl){
+    const preview = document.getElementById('heroBgPhotoPreview');
+    preview.src = photoUrl;
+    preview.style.display = 'block';
   }
 }
-document.getElementById('saveHeroColorBtn').addEventListener('click', async () => {
+
+document.querySelectorAll('input[name="hero-bg-type"]').forEach(radio => {
+  radio.addEventListener('change', () => {
+    const isPhoto = document.querySelector('input[name="hero-bg-type"]:checked').value === 'photo';
+    document.getElementById('heroBgPhotoRow').style.display = isPhoto ? 'flex' : 'none';
+  });
+});
+
+document.getElementById('saveHeroSettingsBtn').addEventListener('click', async () => {
   const status = document.getElementById('heroColorStatus');
-  const value = document.getElementById('heroTextColorInput').value;
   status.textContent = 'Saving…';
-  const { error } = await sb.from('site_settings').upsert([{ key: 'hero_text_color', value }]);
+
+  const textColor = document.getElementById('heroTextColorInput').value;
+  const bgType = document.querySelector('input[name="hero-bg-type"]:checked').value;
+
+  const writes = [
+    { key: 'hero_text_color', value: textColor },
+    { key: 'hero_bg_type', value: bgType }
+  ];
+
+  const file = document.getElementById('heroBgPhotoInput').files[0];
+  if (file){
+    const ext = file.name.split('.').pop();
+    const path = `hero-bg-${Date.now()}.${ext}`;
+    const { error: uploadError } = await sb.storage.from('catalog-photos').upload(path, file, { upsert: true });
+    if (uploadError){ status.textContent = 'Upload gagal: ' + uploadError.message; return; }
+    const { data: pub } = sb.storage.from('catalog-photos').getPublicUrl(path);
+    writes.push({ key: 'hero_bg_photo_url', value: pub.publicUrl });
+    document.getElementById('heroBgPhotoPreview').src = pub.publicUrl;
+    document.getElementById('heroBgPhotoPreview').style.display = 'block';
+  }
+
+  const { error } = await sb.from('site_settings').upsert(writes);
   if (error){ status.textContent = 'Gagal: ' + error.message; return; }
   status.textContent = 'Tersimpan ✓';
   setTimeout(() => { status.textContent = ''; }, 2500);

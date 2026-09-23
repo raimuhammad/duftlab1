@@ -107,6 +107,7 @@
   }
   .hero-bg{position:absolute; inset:-3%; --paper-dim:#17140f;}
   #voidCanvas{position:absolute; inset:0; width:100%; height:100%; display:block;}
+  .hero-bg-photo{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:none;}
   .hero-scrim{
     position:absolute; inset:0;
     background:
@@ -1459,7 +1460,7 @@
 
 <!-- HERO (A24-style) -->
 <div class="hero" id="hero">
-  <div class="hero-bg" id="heroBg"><canvas id="voidCanvas"></canvas></div>
+  <div class="hero-bg" id="heroBg"><canvas id="voidCanvas"></canvas><img class="hero-bg-photo" id="heroBgPhoto" alt=""></div>
   <div class="hero-scrim"></div>
 
   <div class="hero-nav">
@@ -1835,7 +1836,7 @@ async function loadQuizFromSupabase(){
 }
 loadQuizFromSupabase();
 
-/* ---- SITE SETTINGS (e.g. hero variant text color override) ---- */
+/* ---- SITE SETTINGS (hero background type/photo, hero text color) ---- */
 async function loadSiteSettings(){
   if (!backendReady()) return;
   try{
@@ -1844,9 +1845,18 @@ async function loadSiteSettings(){
     });
     if (!res.ok) throw new Error('Settings fetch failed: ' + res.status);
     const rows = await res.json();
-    const heroColor = rows.find(r => r.key === 'hero_text_color');
-    if (heroColor && heroColor.value){
-      document.documentElement.style.setProperty('--hero-text-color', heroColor.value);
+    const get = k => { const r = rows.find(x => x.key === k); return r ? r.value : null; };
+
+    const heroColor = get('hero_text_color');
+    if (heroColor) document.documentElement.style.setProperty('--hero-text-color', heroColor);
+
+    const heroBgType = get('hero_bg_type');
+    const heroBgPhotoUrl = get('hero_bg_photo_url');
+    if (heroBgType === 'photo' && heroBgPhotoUrl){
+      const img = document.getElementById('heroBgPhoto');
+      img.src = heroBgPhotoUrl;
+      img.style.display = 'block';
+      document.getElementById('voidCanvas').style.display = 'none';
     }
   } catch(err){ console.warn('[Site Settings] using defaults —', err); }
 }
