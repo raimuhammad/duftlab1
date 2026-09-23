@@ -107,7 +107,12 @@
   }
   .hero-bg{position:absolute; inset:-3%; --paper-dim:#17140f;}
   #voidCanvas{position:absolute; inset:0; width:100%; height:100%; display:block;}
-  .hero-bg-photo{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:none;}
+  .hero-bg-photo{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0; transition:opacity .6s var(--ease);}
+  .hero.photo-active .hero-bg-photo{opacity:1;}
+  .hero.photo-active #voidCanvas{opacity:0;}
+  #voidCanvas{transition:opacity .6s var(--ease);}
+  /* active variant has its own photo → drop the dark left gradient so the photo shows fully */
+  .hero.photo-active .hero-scrim{background:linear-gradient(0deg, rgba(11,11,9,.3), transparent 26%);}
   .hero-scrim{
     position:absolute; inset:0;
     background:
@@ -149,11 +154,13 @@
     font-size:clamp(26px, 4.6vw, 56px);
     line-height:1.08;
     letter-spacing:-0.01em;
-    color:var(--hero-text-color, #F3F0E8);
+    color:var(--item-color, #F3F0E8);
     transition:opacity .5s var(--ease), font-weight .5s var(--ease), letter-spacing .5s var(--ease), color .5s var(--ease);
     opacity:0; animation:riseIn .7s var(--ease) forwards;
   }
   .hero-list .item.active .t{opacity:.3; font-weight:300;}
+  /* per-variant custom active color (set from admin) — shown at full opacity so the chosen color actually reads */
+  .hero-list .item.active.has-active-color .t{color:var(--item-color-active); opacity:1;}
   .hero-list .item:not(.active):hover .t{letter-spacing:0.006em; color:var(--item-accent, var(--oxide));}
   .hero-list .item .tag{
     font-size:12px; color:var(--muted);
@@ -195,7 +202,8 @@
   }
   body[data-hero-bg="light"] .hero-nav .links{ color:#1C1B18; }
   body[data-hero-bg="light"] .hero-nav .word img{ filter:none; }
-  body[data-hero-bg="light"] .hero-list .item .t{ color:var(--hero-text-color, #1C1B18); }
+  body[data-hero-bg="light"] .hero-list .item .t{ color:var(--item-color, #1C1B18); }
+  body[data-hero-bg="light"] .hero-list .item.active.has-active-color .t{ color:var(--item-color-active); }
   body[data-hero-bg="light"] .hero-info button{ color:#1C1B18; border-bottom-color:rgba(28,27,24,.5); }
   body[data-hero-bg="light"] .scroll-cue{ color:rgba(28,27,24,.55); }
   .scroll-cue .arrow{
@@ -1804,12 +1812,17 @@ async function initCatalogCMS(){
     if (o.overlay_bg_type) target.overlayBgType = o.overlay_bg_type;
     if (o.overlay_bg_color) target.overlayBgColor = o.overlay_bg_color;
     if (o.overlay_photo_url) target.overlayPhotoUrl = o.overlay_photo_url;
+    target.heroTextColor = o.hero_text_color || null;
+    target.heroTextColorActive = o.hero_text_color_active || null;
+    target.heroBgPhoto = o.hero_bg_photo_url || null;
     if (typeof o.coming_soon === 'boolean') target.comingSoon = o.coming_soon;
     if (o.notes_top || o.notes_mid || o.notes_base){
       target.notes = [o.notes_top || target.notes[0], o.notes_mid || target.notes[1], o.notes_base || target.notes[2]];
     }
   });
   renderCatalogGrid(all);
+  applyHeroItemStyles();
+  applyHeroBg(compositions[activeIndex]);
 }
 
 /* ---- CMS: QUIZ QUESTIONS FROM SUPABASE ----
@@ -1836,31 +1849,7 @@ async function loadQuizFromSupabase(){
 }
 loadQuizFromSupabase();
 
-/* ---- SITE SETTINGS (hero background type/photo, hero text color) ---- */
-async function loadSiteSettings(){
-  if (!backendReady()) return;
-  try{
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/site_settings?select=key,value`, {
-      headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
-    });
-    if (!res.ok) throw new Error('Settings fetch failed: ' + res.status);
-    const rows = await res.json();
-    const get = k => { const r = rows.find(x => x.key === k); return r ? r.value : null; };
 
-    const heroColor = get('hero_text_color');
-    if (heroColor) document.documentElement.style.setProperty('--hero-text-color', heroColor);
-
-    const heroBgType = get('hero_bg_type');
-    const heroBgPhotoUrl = get('hero_bg_photo_url');
-    if (heroBgType === 'photo' && heroBgPhotoUrl){
-      const img = document.getElementById('heroBgPhoto');
-      img.src = heroBgPhotoUrl;
-      img.style.display = 'block';
-      document.getElementById('voidCanvas').style.display = 'none';
-    }
-  } catch(err){ console.warn('[Site Settings] using defaults —', err); }
-}
-loadSiteSettings();
 
 const degreeSeries = [
   { n:"C", series:"degree", name:"Celsius", color:"#0f1214", accent:"#8A9BA8", photo:"duftlab-celsius.jpg",
@@ -2117,6 +2106,42 @@ function setActive(i){
     voidField.setAccent(compositions[i].accent);
     voidField.rebuildArcs();
   }
+  applyHeroBg(compositions[i]);
+}
+
+/* Per-variant hero background: a variant with its own hero photo (set in
+   admin) replaces the particle animation and drops the dark left gradient;
+   a variant without one keeps the animation + gradient as before. */
+function applyHeroBg(c){
+  const hero = document.getElementById('hero');
+  const img = document.getElementById('heroBgPhoto');
+  if (c.heroBgPhoto){
+    if (img.getAttribute('src') !== c.heroBgPhoto) img.src = c.heroBgPhoto;
+    img.alt = c.name;
+    hero.classList.add('photo-active');
+  } else {
+    hero.classList.remove('photo-active');
+  }
+}
+
+/* Per-variant hero text colors (before / after click), set in admin.
+   Unset values fall back to the default styling. */
+function applyHeroItemStyles(){
+  [...heroList.children].forEach((it, idx) => {
+    const c = compositions[idx];
+    if (!c) return;
+    if (c.heroTextColor) it.style.setProperty('--item-color', c.heroTextColor);
+    else it.style.removeProperty('--item-color');
+    if (c.heroTextColorActive){
+      it.style.setProperty('--item-color-active', c.heroTextColorActive);
+      it.classList.add('has-active-color');
+    } else {
+      it.style.removeProperty('--item-color-active');
+      it.classList.remove('has-active-color');
+    }
+    const t = it.querySelector('.t');
+    if (t) t.textContent = c.name;
+  });
 }
 setActive(0);
 heroDetailBtn.addEventListener('click', () => openOverlay(compositions[activeIndex]));

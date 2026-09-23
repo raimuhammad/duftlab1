@@ -140,6 +140,24 @@
   .cat-save-row .delete-btn{background:none; border:1px solid var(--line); color:var(--oxide); margin-left:auto;}
   .cat-save-row .delete-btn:hover{border-color:var(--oxide); background:rgba(232,64,44,.1);}
 
+  /* ---------- HERO (per variant) ---------- */
+  .hero-block{border:1px solid var(--line); padding:14px;}
+  .hero-color-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;}
+  @media(max-width:700px){ .hero-color-grid{grid-template-columns:1fr;} }
+  .hero-color-row{display:flex; align-items:center; gap:8px; font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); cursor:pointer;}
+  .hero-color-row span{flex:1;}
+  .hero-color-row input[type=color]{width:40px; height:28px; border:1px solid var(--line); background:none; cursor:pointer; padding:0;}
+  .hero-color-row input[type=color]:disabled{opacity:.25; cursor:not-allowed;}
+  .hero-bg-row{display:flex; gap:14px; align-items:flex-start;}
+  .hero-bg-preview{width:140px; aspect-ratio:16/9; flex-shrink:0; border:1px solid var(--line); background:#1a1a17; display:flex; align-items:center; justify-content:center; overflow:hidden;}
+  .hero-bg-preview img{width:100%; height:100%; object-fit:cover;}
+  .hero-bg-preview span{font-family:var(--mono); font-size:9px; color:var(--muted); text-align:center; padding:6px;}
+  .hero-bg-actions{display:flex; flex-direction:column; gap:8px; flex:1; min-width:0;}
+  .hero-bg-actions input[type=file]{font-size:11px; font-family:var(--mono); color:var(--muted);}
+  .hero-bg-remove{align-self:flex-start; background:none; border:1px solid var(--line); color:var(--oxide); padding:5px 10px; font-family:var(--mono); font-size:10px; text-transform:uppercase; cursor:pointer;}
+  .hero-bg-remove:disabled{opacity:.3; cursor:not-allowed;}
+  .hero-bg-note{font-family:var(--mono); font-size:9px; color:var(--muted); line-height:1.5;}
+
   /* ---------- QUIZ EDITOR ---------- */
   .quiz-q-card{background:var(--card); border:1px solid var(--line); padding:20px; margin-bottom:16px;}
   .quiz-q-head{display:flex; gap:10px; align-items:flex-start; margin-bottom:16px;}
@@ -277,29 +295,6 @@
         <button class="range-btn" data-range="all">All Time</button>
       </div>
 
-      <div style="border:1px solid var(--line); padding:16px 20px; margin-bottom:32px;">
-        <div style="font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:14px;">Site Settings — Hero</div>
-
-        <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:16px;">
-          <div style="flex:1; min-width:200px; font-size:12px; color:var(--muted);">Hero variant text color (Celsius / Fahrenheit / etc. list) — pick a color that stays readable against your hero background.</div>
-          <input type="color" id="heroTextColorInput" value="#F3F0E8" style="width:44px; height:32px; border:1px solid var(--line); background:none; cursor:pointer;">
-        </div>
-
-        <div style="display:flex; gap:16px; align-items:center; margin-bottom:10px;">
-          <label class="chk"><input type="radio" name="hero-bg-type" id="heroBgTypeAnimation" value="animation" checked> Particle Animation</label>
-          <label class="chk"><input type="radio" name="hero-bg-type" id="heroBgTypePhoto" value="photo"> Photo</label>
-        </div>
-        <div id="heroBgPhotoRow" style="display:none; gap:10px; align-items:center; margin-bottom:14px;">
-          <input type="file" accept="image/*" id="heroBgPhotoInput" style="flex:1;">
-          <img id="heroBgPhotoPreview" style="width:60px; height:34px; object-fit:cover; border:1px solid var(--line); display:none;">
-        </div>
-
-        <div style="display:flex; align-items:center; gap:12px;">
-          <button id="saveHeroSettingsBtn" style="background:var(--ink); color:var(--bg); border:none; padding:8px 16px; font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.05em; cursor:pointer;">Save Hero Settings</button>
-          <span class="status" id="heroColorStatus" style="font-family:var(--mono); font-size:11px; color:var(--muted);"></span>
-        </div>
-      </div>
-
       <div class="loading-note" id="overviewLoading">Loading…</div>
       <div id="overviewContent" style="display:none;">
         <div class="stat-grid">
@@ -423,7 +418,6 @@ function showAdmin(){
   loginScreen.style.display = 'none';
   adminShell.style.display = 'block';
   loadOverview('7d');
-  loadSiteSettings();
   loadCatalog();
   loadLeads();
   loadNewsletter();
@@ -433,62 +427,7 @@ function showAdmin(){
   loadQuizQuestions();
 }
 
-async function loadSiteSettings(){
-  const { data } = await sb.from('site_settings').select('*');
-  const get = k => { const r = (data || []).find(x => x.key === k); return r ? r.value : null; };
 
-  const textColor = get('hero_text_color');
-  if (textColor) document.getElementById('heroTextColorInput').value = textColor;
-
-  const bgType = get('hero_bg_type') || 'animation';
-  document.getElementById('heroBgTypeAnimation').checked = bgType === 'animation';
-  document.getElementById('heroBgTypePhoto').checked = bgType === 'photo';
-  document.getElementById('heroBgPhotoRow').style.display = bgType === 'photo' ? 'flex' : 'none';
-
-  const photoUrl = get('hero_bg_photo_url');
-  if (photoUrl){
-    const preview = document.getElementById('heroBgPhotoPreview');
-    preview.src = photoUrl;
-    preview.style.display = 'block';
-  }
-}
-
-document.querySelectorAll('input[name="hero-bg-type"]').forEach(radio => {
-  radio.addEventListener('change', () => {
-    const isPhoto = document.querySelector('input[name="hero-bg-type"]:checked').value === 'photo';
-    document.getElementById('heroBgPhotoRow').style.display = isPhoto ? 'flex' : 'none';
-  });
-});
-
-document.getElementById('saveHeroSettingsBtn').addEventListener('click', async () => {
-  const status = document.getElementById('heroColorStatus');
-  status.textContent = 'Saving…';
-
-  const textColor = document.getElementById('heroTextColorInput').value;
-  const bgType = document.querySelector('input[name="hero-bg-type"]:checked').value;
-
-  const writes = [
-    { key: 'hero_text_color', value: textColor },
-    { key: 'hero_bg_type', value: bgType }
-  ];
-
-  const file = document.getElementById('heroBgPhotoInput').files[0];
-  if (file){
-    const ext = file.name.split('.').pop();
-    const path = `hero-bg-${Date.now()}.${ext}`;
-    const { error: uploadError } = await sb.storage.from('catalog-photos').upload(path, file, { upsert: true });
-    if (uploadError){ status.textContent = 'Upload gagal: ' + uploadError.message; return; }
-    const { data: pub } = sb.storage.from('catalog-photos').getPublicUrl(path);
-    writes.push({ key: 'hero_bg_photo_url', value: pub.publicUrl });
-    document.getElementById('heroBgPhotoPreview').src = pub.publicUrl;
-    document.getElementById('heroBgPhotoPreview').style.display = 'block';
-  }
-
-  const { error } = await sb.from('site_settings').upsert(writes);
-  if (error){ status.textContent = 'Gagal: ' + error.message; return; }
-  status.textContent = 'Tersimpan ✓';
-  setTimeout(() => { status.textContent = ''; }, 2500);
-});
 
 /* ---------- TOP-LEVEL TABS ---------- */
 document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -696,6 +635,29 @@ function renderCatalogCard(item){
           <span style="font-family:var(--mono); font-size:9px; color:var(--muted);">Custom color for the ribbon animation</span>
         </div>
       </div>
+      <div class="full hero-block">
+        <span class="field-label">Hero — shown in the variant list on the homepage</span>
+        <div class="hero-color-grid">
+          <label class="hero-color-row">
+            <input type="checkbox" class="hero-color-custom" data-which="inactive" ${item.hero_text_color ? 'checked' : ''}>
+            <span>Text color — before click</span>
+            <input type="color" class="hero-color-input" data-which="inactive" value="${item.hero_text_color || '#F3F0E8'}" ${item.hero_text_color ? '' : 'disabled'}>
+          </label>
+          <label class="hero-color-row">
+            <input type="checkbox" class="hero-color-custom" data-which="active" ${item.hero_text_color_active ? 'checked' : ''}>
+            <span>Text color — after click</span>
+            <input type="color" class="hero-color-input" data-which="active" value="${item.hero_text_color_active || '#E8402C'}" ${item.hero_text_color_active ? '' : 'disabled'}>
+          </label>
+        </div>
+        <div class="hero-bg-row">
+          <div class="hero-bg-preview">${item.hero_bg_photo_url ? `<img src="${item.hero_bg_photo_url}" alt="">` : '<span>No photo — particle animation</span>'}</div>
+          <div class="hero-bg-actions">
+            <input type="file" accept="image/*" class="hero-bg-input">
+            <button type="button" class="hero-bg-remove" ${item.hero_bg_photo_url ? '' : 'disabled'}>Remove photo</button>
+            <span class="hero-bg-note">With a photo, the dark left gradient is removed when this variant is selected.</span>
+          </div>
+        </div>
+      </div>
       <div><span class="field-label">Share Card — Tagline</span><input data-f="share_tagline" value="${esc(item.share_tagline)}" placeholder="For the one who..."></div>
       <div><span class="field-label">Share Card — Mood</span><input data-f="share_mood" value="${esc(item.share_mood)}" placeholder="Bold · Warm Wood · Unresolved"></div>
       <div class="full"><span class="field-label">Tagline</span><input data-f="line" value="${esc(item.line)}"></div>
@@ -731,6 +693,27 @@ function renderCatalogCard(item){
       card.querySelector('.overlay-photo-row').style.display = isRibbon ? 'none' : 'flex';
       card.querySelector('.overlay-color-row').style.display = isRibbon ? 'flex' : 'none';
     });
+  });
+
+  card.querySelectorAll('.hero-color-custom').forEach(cb => {
+    cb.addEventListener('change', () => {
+      card.querySelector(`.hero-color-input[data-which="${cb.dataset.which}"]`).disabled = !cb.checked;
+    });
+  });
+  const heroPreview = card.querySelector('.hero-bg-preview');
+  const heroRemoveBtn = card.querySelector('.hero-bg-remove');
+  card.querySelector('.hero-bg-input').addEventListener('change', (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    heroPreview.innerHTML = `<img src="${URL.createObjectURL(f)}" alt="">`;
+    card.dataset.heroBgRemove = '';
+    heroRemoveBtn.disabled = false;
+  });
+  heroRemoveBtn.addEventListener('click', () => {
+    card.querySelector('.hero-bg-input').value = '';
+    heroPreview.innerHTML = '<span>No photo — particle animation</span>';
+    card.dataset.heroBgRemove = '1';
+    heroRemoveBtn.disabled = true;
   });
 
   card.querySelector('.save-btn').addEventListener('click', () => saveCatalogItem(item.n, card));
@@ -782,6 +765,24 @@ async function saveCatalogItem(n, card){
 
   updates.overlay_bg_type = card.querySelector('.overlay-type-radio:checked').value;
   updates.overlay_bg_color = card.querySelector('.overlay-color-input').value;
+
+  card.querySelectorAll('.hero-color-custom').forEach(cb => {
+    const input = card.querySelector(`.hero-color-input[data-which="${cb.dataset.which}"]`);
+    const col = cb.dataset.which === 'active' ? 'hero_text_color_active' : 'hero_text_color';
+    updates[col] = cb.checked ? input.value : null;
+  });
+
+  const heroFile = card.querySelector('.hero-bg-input').files[0];
+  if (heroFile){
+    const ext = heroFile.name.split('.').pop();
+    const path = `${n}-hero-${Date.now()}.${ext}`;
+    const { error: heroUpErr } = await sb.storage.from('catalog-photos').upload(path, heroFile, { upsert: true });
+    if (heroUpErr){ status.className = 'status err'; status.textContent = 'Upload hero gagal: ' + heroUpErr.message; return; }
+    const { data: heroPub } = sb.storage.from('catalog-photos').getPublicUrl(path);
+    updates.hero_bg_photo_url = heroPub.publicUrl;
+  } else if (card.dataset.heroBgRemove === '1'){
+    updates.hero_bg_photo_url = null;
+  }
 
   const overlayFile = card.querySelector('.overlay-photo-input').files[0];
   if (overlayFile){
