@@ -148,7 +148,7 @@
     font-size:clamp(26px, 4.6vw, 56px);
     line-height:1.08;
     letter-spacing:-0.01em;
-    color:#F3F0E8;
+    color:var(--hero-text-color, #F3F0E8);
     transition:opacity .5s var(--ease), font-weight .5s var(--ease), letter-spacing .5s var(--ease), color .5s var(--ease);
     opacity:0; animation:riseIn .7s var(--ease) forwards;
   }
@@ -194,7 +194,7 @@
   }
   body[data-hero-bg="light"] .hero-nav .links{ color:#1C1B18; }
   body[data-hero-bg="light"] .hero-nav .word img{ filter:none; }
-  body[data-hero-bg="light"] .hero-list .item .t{ color:#1C1B18; }
+  body[data-hero-bg="light"] .hero-list .item .t{ color:var(--hero-text-color, #1C1B18); }
   body[data-hero-bg="light"] .hero-info button{ color:#1C1B18; border-bottom-color:rgba(28,27,24,.5); }
   body[data-hero-bg="light"] .scroll-cue{ color:rgba(28,27,24,.55); }
   .scroll-cue .arrow{
@@ -1145,14 +1145,17 @@
     min-height:44px; display:inline-flex; align-items:center;
   }
   .intro-cta:hover{background:rgba(243,240,232,.08); border-color:#F3F0E8;}
-  .intro-skip{
-    position:absolute; bottom:max(28px,env(safe-area-inset-bottom)); right:7vw;
-    font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.1em;
-    color:rgba(243,240,232,.22); background:none; border:none; cursor:none;
-    transition:color .2s ease;
-    opacity:0; animation:riseIn .5s var(--ease) 1.1s forwards;
+  .intro-actions{
+    display:flex; align-items:center; gap:20px; flex-wrap:wrap;
+    opacity:0; animation:riseIn .6s var(--ease) .9s forwards;
   }
-  .intro-skip:hover{color:rgba(243,240,232,.55);}
+  .intro-actions .intro-cta{opacity:1; animation:none;}
+  .intro-skip{
+    font-family:var(--mono); font-size:12px; text-transform:uppercase; letter-spacing:.1em;
+    color:rgba(243,240,232,.7); background:none; border:none; border-bottom:1px solid rgba(243,240,232,.3);
+    padding:4px 0; cursor:none; transition:color .2s ease, border-color .2s ease;
+  }
+  .intro-skip:hover{color:#F3F0E8; border-color:#F3F0E8;}
 
   /* ---------- NOTIFY MODAL (Request Access) ---------- */
   #notifyModal{
@@ -1416,6 +1419,8 @@
     .intro-overline{margin-bottom:18px; font-size:10px;}
     .intro-sub{font-size:11px; margin-bottom:26px;}
     .intro-cta{width:100%; justify-content:center; padding:15px 0; text-align:center;}
+    .intro-actions{flex-direction:column; align-items:stretch; gap:16px; width:100%;}
+    .intro-skip{text-align:center; border-bottom:none;}
   }
   /* --- Touch: no hover states, comfortable tap targets --- */
   @media (hover:none){
@@ -1443,9 +1448,11 @@
     <h1 class="intro-question">When facing<br>a defining moment —</h1>
     <p class="intro-line-b">do you leap first,<br>or map the path?</p>
     <p class="intro-sub">Two specimens in active formulation. One will match you.<br>Take the test to find out which.</p>
-    <button class="intro-cta" onclick="startIntro()">Take the test →</button>
+    <div class="intro-actions">
+      <button class="intro-cta" onclick="startIntro()">Take the test →</button>
+      <button class="intro-skip" onclick="skipIntro()">Enter without the quiz</button>
+    </div>
   </div>
-  <button class="intro-skip" onclick="skipIntro()">Skip — Enter Lab</button>
 </div>
 <div class="cursor-ring" id="cursorRing"></div>
 <div class="cursor-dot" id="cursorDot"></div>
@@ -1793,6 +1800,9 @@ async function initCatalogCMS(){
     if (o.share_tagline) target.shareTagline = o.share_tagline;
     if (o.share_mood) target.shareMood = o.share_mood;
     if (o.photo_position) target.photoPosition = o.photo_position;
+    if (o.overlay_bg_type) target.overlayBgType = o.overlay_bg_type;
+    if (o.overlay_bg_color) target.overlayBgColor = o.overlay_bg_color;
+    if (o.overlay_photo_url) target.overlayPhotoUrl = o.overlay_photo_url;
     if (typeof o.coming_soon === 'boolean') target.comingSoon = o.coming_soon;
     if (o.notes_top || o.notes_mid || o.notes_base){
       target.notes = [o.notes_top || target.notes[0], o.notes_mid || target.notes[1], o.notes_base || target.notes[2]];
@@ -1824,6 +1834,23 @@ async function loadQuizFromSupabase(){
   } catch(err){ console.warn('[Quiz CMS] falling back to built-in questions —', err); }
 }
 loadQuizFromSupabase();
+
+/* ---- SITE SETTINGS (e.g. hero variant text color override) ---- */
+async function loadSiteSettings(){
+  if (!backendReady()) return;
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/site_settings?select=key,value`, {
+      headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
+    });
+    if (!res.ok) throw new Error('Settings fetch failed: ' + res.status);
+    const rows = await res.json();
+    const heroColor = rows.find(r => r.key === 'hero_text_color');
+    if (heroColor && heroColor.value){
+      document.documentElement.style.setProperty('--hero-text-color', heroColor.value);
+    }
+  } catch(err){ console.warn('[Site Settings] using defaults —', err); }
+}
+loadSiteSettings();
 
 const degreeSeries = [
   { n:"C", series:"degree", name:"Celsius", color:"#0f1214", accent:"#8A9BA8", photo:"duftlab-celsius.jpg",
@@ -2112,8 +2139,16 @@ function unlockScroll(){
 
 function openOverlay(c){
   const ov = document.getElementById('ovColor');
+  disposeRibbons(ov); // clean up any previous WebGL context before swapping content
   ov.style.background = 'none';
-  ov.innerHTML = `<img src="${c.photo}" alt="${c.name}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:${c.photoPosition || '50% 50%'};">`;
+  if (c.overlayBgType === 'ribbon'){
+    const ribbonHex = c.overlayBgColor || c.accent;
+    ov.innerHTML = ribbonDiv({ accent: ribbonHex });
+    initRibbons(ov);
+  } else {
+    const bgPhoto = c.overlayPhotoUrl || c.photo;
+    ov.innerHTML = `<img src="${bgPhoto}" alt="${c.name}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:${c.photoPosition || '50% 50%'};">`;
+  }
   document.getElementById('ovTag').textContent = "Specimen No. " + c.n;
   document.getElementById('ovTitle').textContent = c.name;
   document.getElementById('ovLine').textContent = c.line;
@@ -2140,6 +2175,7 @@ function openOverlay(c){
 }
 function closeOverlay(){
   document.getElementById('overlayPanel').classList.remove('open');
+  disposeRibbons(document.getElementById('ovColor'));
   unlockScroll();
 }
 

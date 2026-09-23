@@ -277,6 +277,16 @@
         <button class="range-btn" data-range="all">All Time</button>
       </div>
 
+      <div style="border:1px solid var(--line); padding:16px 20px; margin-bottom:32px; display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+        <div>
+          <div style="font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:4px;">Site Settings</div>
+          <div style="font-size:12px; color:var(--muted);">Hero variant text color (Celsius / Fahrenheit / etc. list) — pick a color that stays readable against your hero photo/background.</div>
+        </div>
+        <input type="color" id="heroTextColorInput" value="#F3F0E8" style="width:44px; height:32px; border:1px solid var(--line); background:none; cursor:pointer; margin-left:auto;">
+        <button id="saveHeroColorBtn" style="background:var(--ink); color:var(--bg); border:none; padding:8px 16px; font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.05em; cursor:pointer;">Save</button>
+        <span class="status" id="heroColorStatus" style="font-family:var(--mono); font-size:11px; color:var(--muted);"></span>
+      </div>
+
       <div class="loading-note" id="overviewLoading">Loading…</div>
       <div id="overviewContent" style="display:none;">
         <div class="stat-grid">
@@ -400,6 +410,7 @@ function showAdmin(){
   loginScreen.style.display = 'none';
   adminShell.style.display = 'block';
   loadOverview('7d');
+  loadSiteSettings();
   loadCatalog();
   loadLeads();
   loadNewsletter();
@@ -408,6 +419,22 @@ function showAdmin(){
   loadClicks();
   loadQuizQuestions();
 }
+
+async function loadSiteSettings(){
+  const { data } = await sb.from('site_settings').select('*').eq('key', 'hero_text_color');
+  if (data && data.length && data[0].value){
+    document.getElementById('heroTextColorInput').value = data[0].value;
+  }
+}
+document.getElementById('saveHeroColorBtn').addEventListener('click', async () => {
+  const status = document.getElementById('heroColorStatus');
+  const value = document.getElementById('heroTextColorInput').value;
+  status.textContent = 'Saving…';
+  const { error } = await sb.from('site_settings').upsert([{ key: 'hero_text_color', value }]);
+  if (error){ status.textContent = 'Gagal: ' + error.message; return; }
+  status.textContent = 'Tersimpan ✓';
+  setTimeout(() => { status.textContent = ''; }, 2500);
+});
 
 /* ---------- TOP-LEVEL TABS ---------- */
 document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -600,6 +627,21 @@ function renderCatalogCard(item){
       <div><span class="field-label">Stock</span><input data-f="stock" value="${esc(item.stock)}"></div>
       <div><label class="chk"><input type="checkbox" data-f="coming_soon" ${item.coming_soon ? 'checked' : ''}> Coming Soon</label></div>
       <div class="full"><span class="field-label">Shopee Link</span><input data-f="shopee_url" value="${esc(item.shopee_url)}" placeholder="https://shopee.co.id/..."></div>
+      <div class="full">
+        <span class="field-label">Overlay Background (shown when this specimen is clicked)</span>
+        <div style="display:flex; gap:16px; align-items:center; margin-bottom:8px;">
+          <label class="chk"><input type="radio" name="overlay-type-${item.n}" class="overlay-type-radio" value="photo" ${item.overlay_bg_type !== 'ribbon' ? 'checked' : ''}> Photo</label>
+          <label class="chk"><input type="radio" name="overlay-type-${item.n}" class="overlay-type-radio" value="ribbon" ${item.overlay_bg_type === 'ribbon' ? 'checked' : ''}> Ribbon Animation</label>
+        </div>
+        <div class="overlay-photo-row" style="display:${item.overlay_bg_type === 'ribbon' ? 'none' : 'flex'}; gap:10px; align-items:center;">
+          <input type="file" accept="image/*" class="overlay-photo-input" style="flex:1;">
+          <span style="font-family:var(--mono); font-size:9px; color:var(--muted);">Optional — leave empty to reuse the catalog photo</span>
+        </div>
+        <div class="overlay-color-row" style="display:${item.overlay_bg_type === 'ribbon' ? 'flex' : 'none'}; gap:10px; align-items:center;">
+          <input type="color" class="overlay-color-input" value="${item.overlay_bg_color || item.accent || '#E8402C'}" style="width:44px; height:32px; border:1px solid var(--line); background:none; cursor:pointer;">
+          <span style="font-family:var(--mono); font-size:9px; color:var(--muted);">Custom color for the ribbon animation</span>
+        </div>
+      </div>
       <div><span class="field-label">Share Card — Tagline</span><input data-f="share_tagline" value="${esc(item.share_tagline)}" placeholder="For the one who..."></div>
       <div><span class="field-label">Share Card — Mood</span><input data-f="share_mood" value="${esc(item.share_mood)}" placeholder="Bold · Warm Wood · Unresolved"></div>
       <div class="full"><span class="field-label">Tagline</span><input data-f="line" value="${esc(item.line)}"></div>
@@ -627,6 +669,14 @@ function renderCatalogCard(item){
   posYSlider.addEventListener('input', () => {
     card.querySelector('.posy-val').textContent = posYSlider.value + '%';
     photoImg.style.objectPosition = `${posXSlider.value}% ${posYSlider.value}%`;
+  });
+
+  card.querySelectorAll('.overlay-type-radio').forEach(radio => {
+    radio.addEventListener('change', () => {
+      const isRibbon = card.querySelector('.overlay-type-radio:checked').value === 'ribbon';
+      card.querySelector('.overlay-photo-row').style.display = isRibbon ? 'none' : 'flex';
+      card.querySelector('.overlay-color-row').style.display = isRibbon ? 'flex' : 'none';
+    });
   });
 
   card.querySelector('.save-btn').addEventListener('click', () => saveCatalogItem(item.n, card));
@@ -675,6 +725,19 @@ async function saveCatalogItem(n, card){
   const posX = card.querySelector('.pos-x-slider').value;
   const posY = card.querySelector('.pos-y-slider').value;
   updates.photo_position = `${posX}% ${posY}%`;
+
+  updates.overlay_bg_type = card.querySelector('.overlay-type-radio:checked').value;
+  updates.overlay_bg_color = card.querySelector('.overlay-color-input').value;
+
+  const overlayFile = card.querySelector('.overlay-photo-input').files[0];
+  if (overlayFile){
+    const ext = overlayFile.name.split('.').pop();
+    const path = `${n}-overlay-${Date.now()}.${ext}`;
+    const { error: ovUploadError } = await sb.storage.from('catalog-photos').upload(path, overlayFile, { upsert: true });
+    if (ovUploadError){ status.className = 'status err'; status.textContent = 'Upload overlay gagal: ' + ovUploadError.message; return; }
+    const { data: ovPub } = sb.storage.from('catalog-photos').getPublicUrl(path);
+    updates.overlay_photo_url = ovPub.publicUrl;
+  }
 
   const file = card.querySelector('.photo-input').files[0];
   if (file){
