@@ -4,6 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0B0B09">
+<link rel="canonical" href="https://duftlab.com/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Duftlab">
+<meta property="og:url" content="https://duftlab.com/">
+<meta property="og:title" content="DUFTLAB — Where Science and Affection Break Even">
+<meta property="og:description" content="A Jakarta perfumery formulating scent as evidence. Take the quiz to find the specimen that matches you.">
+<meta property="og:image" content="https://duftlab.com/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="DUFTLAB — Where Science and Affection Break Even">
+<meta name="twitter:description" content="A Jakarta perfumery formulating scent as evidence. Take the quiz to find the specimen that matches you.">
+<meta name="twitter:image" content="https://duftlab.com/og-image.jpg">
 <title>DUFTLAB — Where Science and Affection Break Even</title>
 <meta name="description" content="Duftlab is a Jakarta perfumery formulating scent as evidence. Six compositions, each named for a way of measuring change.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -24,6 +37,12 @@
   }
   *{margin:0;padding:0;box-sizing:border-box;}
   button, input, select, textarea{font-family:inherit;}
+  /* keyboard focus ring (mouse clicks don't show it) */
+  :focus-visible{outline:2px solid var(--oxide); outline-offset:3px;}
+  #shopGridDegree, #shopGridFraction{transition:opacity .45s ease;}
+  .cms-pending{opacity:0 !important;}
+  .hp-field{position:absolute !important; left:-10000px !important; width:1px; height:1px; opacity:0;}
+  .sr-only{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap;}
   html{scroll-behavior:smooth;}
   body{
     background-color:var(--paper);
@@ -112,7 +131,7 @@
   .hero.photo-active #voidCanvas{opacity:0;}
   #voidCanvas{transition:opacity .6s var(--ease);}
   /* active variant has its own photo → drop the dark left gradient so the photo shows fully */
-  .hero.photo-active .hero-scrim{background:linear-gradient(0deg, rgba(11,11,9,.3), transparent 26%);}
+  .hero.photo-active .hero-scrim{background:linear-gradient(0deg, rgba(246,243,236,.35), transparent 26%);}
   .hero-scrim{
     position:absolute; inset:0;
     background:
@@ -1463,8 +1482,8 @@
     </div>
   </div>
 </div>
-<div class="cursor-ring" id="cursorRing"></div>
-<div class="cursor-dot" id="cursorDot"></div>
+<div class="cursor-ring" id="cursorRing" aria-hidden="true"></div>
+<div class="cursor-dot" id="cursorDot" aria-hidden="true"></div>
 
 <!-- HERO (A24-style) -->
 <div class="hero" id="hero">
@@ -1580,8 +1599,8 @@
       <p class="desc" id="fDesc"></p>
       <div class="notes-row" id="fNotes"></div>
       <div class="featured-pager">
-        <button class="fp-btn" id="fPrev">←</button>
-        <button class="fp-btn" id="fNext">→</button>
+        <button class="fp-btn" id="fPrev" aria-label="Previous specimen">←</button>
+        <button class="fp-btn" id="fNext" aria-label="Next specimen">→</button>
         <div class="fp-dots" id="fDots"></div>
         <div class="fp-count" id="fCount"></div>
       </div>
@@ -1639,7 +1658,7 @@
   <div class="foot-top">
     <h4>Join the record. New compositions, first.</h4>
     <form class="foot-form" id="footForm" onsubmit="return false;">
-      <input type="email" id="footEmail" placeholder="Email address" />
+      <input type="email" id="footEmail" placeholder="Email address" maxlength="200" /><input type="text" class="hp-field" tabindex="-1" autocomplete="off" aria-hidden="true" name="website" id="footHp">
       <button type="submit" id="footSubmit">Subscribe</button>
     </form>
   </div>
@@ -1700,7 +1719,6 @@
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 /* Series split:
    Degree Series  → Celsius, Fahrenheit, Kelvin, Reaumur (released, photo available)
@@ -1729,6 +1747,7 @@ async function supabaseInsert(table, row){
       },
       body: JSON.stringify([row])
     });
+    if (res.status === 409) return true; // already exists (e.g. same email subscribed twice) — treat as success
     if (!res.ok) throw new Error('Supabase insert failed: ' + res.status);
     return true;
   } catch(err){ console.warn('[supabaseInsert]', table, err); return null; }
@@ -1751,6 +1770,29 @@ async function supabaseRpc(fn, args){
   } catch(err){ console.warn('[supabaseRpc]', fn, err); return null; }
 }
 
+/* Enter/Space activates non-button elements that behave like buttons */
+document.addEventListener('keydown', e => {
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('[role="button"]:not(button)') && !e.target.closest('.hero-list')){
+    e.preventDefault();
+    e.target.click();
+  }
+});
+
+/* ---- SHOPEE OUTBOUND LINK ----
+   Adds UTM tags so traffic from the site can be told apart from Instagram /
+   direct Shopee traffic in any tool that reads UTMs. Existing params win. */
+function shopeeLink(c){
+  try{
+    const u = new URL(c.shopeeUrl);
+    const put = (k, v) => { if (!u.searchParams.has(k)) u.searchParams.set(k, v); };
+    put('utm_source', 'duftlab.com');
+    put('utm_medium', 'website');
+    put('utm_campaign', 'catalog');
+    put('utm_content', String(c.n).toLowerCase());
+    return u.toString();
+  } catch(e){ return c.shopeeUrl; }
+}
+
 /* ---- PAGE VIEW / FUNNEL TRACKING ---- */
 function trackFunnelEvent(eventType){
   const device = window.innerWidth < 760 ? 'mobile' : 'desktop';
@@ -1761,7 +1803,14 @@ function trackFunnelEvent(eventType){
     device
   });
 }
-trackFunnelEvent('page_view');
+(function logPageView(){
+  if (navigator.webdriver || /bot|crawl|spider|preview|facebookexternalhit/i.test(navigator.userAgent)) return;
+  try{
+    if (sessionStorage.getItem('dl_pv')) return;   // one visit per browser session, not per refresh
+    sessionStorage.setItem('dl_pv', '1');
+  } catch(e){}
+  trackFunnelEvent('page_view');
+})();
 
 /* ---- PRODUCT CLICK TRACKING ---- */
 function trackProductClick(c, action){
@@ -1787,49 +1836,98 @@ async function loadCatalogFromSupabase(){
   } catch(err){ console.warn('[Catalog CMS] falling back to built-in data —', err); return null; }
 }
 
-/* Merges Supabase rows (matched by the `n` column, e.g. "C", "K", "EXP") into
-   the built-in degreeSeries / fractionSeries objects, only overwriting the
-   fields a row actually provides — then re-renders the catalog grid. */
-async function initCatalogCMS(){
-  const overrides = await loadCatalogFromSupabase();
-  if (!overrides) return;
-  const all = [...degreeSeries, ...fractionSeries];
-  overrides.forEach(o => {
-    const target = all.find(c => c.n === o.n);
-    if (!target) return;
-    if (o.name) target.name = o.name;
-    if (o.price) target.price = o.price;
-    if (o.size) target.size = o.size;
-    if (o.type) target.type = o.type;
-    if (o.stock) target.stock = o.stock;
-    if (o.line) target.line = o.line;
-    if (o.desc) target.desc = o.desc;
-    if (o.photo_url) target.photo = o.photo_url;
-    if (o.shopee_url) target.shopeeUrl = o.shopee_url;
-    if (o.share_tagline) target.shareTagline = o.share_tagline;
-    if (o.share_mood) target.shareMood = o.share_mood;
-    if (o.photo_position) target.photoPosition = o.photo_position;
-    if (o.overlay_bg_type) target.overlayBgType = o.overlay_bg_type;
-    if (o.overlay_bg_color) target.overlayBgColor = o.overlay_bg_color;
-    if (o.overlay_photo_url) target.overlayPhotoUrl = o.overlay_photo_url;
-    target.heroTextColor = o.hero_text_color || null;
-    target.heroTextColorActive = o.hero_text_color_active || null;
-    target.heroBgPhoto = o.hero_bg_photo_url || null;
-    if (typeof o.coming_soon === 'boolean') target.comingSoon = o.coming_soon;
-    if (o.notes_top || o.notes_mid || o.notes_base){
-      target.notes = [o.notes_top || target.notes[0], o.notes_mid || target.notes[1], o.notes_base || target.notes[2]];
+/* ---- CMS cache ----
+   The last catalog/quiz response is kept in the visitor's browser, so repeat
+   visits render the current content immediately instead of flashing the
+   built-in defaults first. */
+const CATALOG_CACHE_KEY = 'dl_catalog_v1';
+const QUIZ_CACHE_KEY = 'dl_quiz_v1';
+function readCache(k){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch(e){ return null; } }
+function writeCache(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+
+/* Applies Supabase catalog rows onto the in-page data. Rows define the
+   specimen list itself (added/removed/reordered in admin), and each row's
+   non-empty fields overwrite that specimen's built-in defaults.
+   Returns true if the list of specimens changed (not just their content). */
+function applyCatalogRows(rows){
+  const byN = new Map([...degreeSeries, ...fractionSeries].map(c => [c.n, c]));
+  const next = rows.map(o => {
+    let t = byN.get(o.n);
+    if (!t){
+      t = { n:o.n, series:o.series || 'degree', name:o.n, color:'#141414', accent:'#E8402C',
+            photo:'duftlab-celsius.jpg', price:'–', size:'', type:'Eau de Parfum', stock:'',
+            line:'', desc:'', notes:['Undisclosed','Undisclosed','Undisclosed'] };
     }
+    if (o.series) t.series = o.series;
+    if (o.name) t.name = o.name;
+    if (o.price) t.price = o.price;
+    if (o.size) t.size = o.size;
+    if (o.type) t.type = o.type;
+    if (o.stock) t.stock = o.stock;
+    if (o.line) t.line = o.line;
+    if (o.desc) t.desc = o.desc;
+    if (o.photo_url) t.photo = o.photo_url;
+    t.shopeeUrl = o.shopee_url || null;
+    if (o.share_tagline) t.shareTagline = o.share_tagline;
+    if (o.share_mood) t.shareMood = o.share_mood;
+    if (o.photo_position) t.photoPosition = o.photo_position;
+    if (o.overlay_bg_type) t.overlayBgType = o.overlay_bg_type;
+    if (o.overlay_bg_color) t.overlayBgColor = o.overlay_bg_color;
+    t.overlayPhotoUrl = o.overlay_photo_url || null;
+    t.heroTextColor = o.hero_text_color || null;
+    t.heroTextColorActive = o.hero_text_color_active || null;
+    t.heroBgPhoto = o.hero_bg_photo_url || null;
+    if (typeof o.coming_soon === 'boolean') t.comingSoon = o.coming_soon;
+    if (o.notes_top || o.notes_mid || o.notes_base){
+      t.notes = [o.notes_top || t.notes[0], o.notes_mid || t.notes[1], o.notes_base || t.notes[2]];
+    }
+    return t;
   });
-  renderCatalogGrid(all);
+  const before = compositions.map(c => c.n).join('|');
+  degreeSeries.length = 0;
+  fractionSeries.length = 0;
+  next.forEach(c => (c.series === 'fraction' ? fractionSeries : degreeSeries).push(c));
+  compositions.length = 0;
+  compositions.push(...degreeSeries, ...fractionSeries);
+  if (activeIndex >= compositions.length) activeIndex = 0;
+  return compositions.map(c => c.n).join('|') !== before;
+}
+
+async function initCatalogCMS(){
+  const rows = await loadCatalogFromSupabase();
+  document.querySelectorAll('.cms-pending').forEach(el => el.classList.remove('cms-pending'));
+  if (!rows) return;
+  const cached = readCache(CATALOG_CACHE_KEY);
+  if (cached && JSON.stringify(cached) === JSON.stringify(rows)) return; // already rendered from cache
+  writeCache(CATALOG_CACHE_KEY, rows);
+  const structureChanged = applyCatalogRows(rows);
+  if (structureChanged){
+    buildHeroList();
+    resetLayer();
+    buildLayerChips();
+  }
+  renderCatalogGrid(compositions);
   applyHeroItemStyles();
-  applyHeroBg(compositions[activeIndex]);
+  setActive(activeIndex);
 }
 
 /* ---- CMS: QUIZ QUESTIONS FROM SUPABASE ----
    (Managed from admin.html → Quiz tab.) Falls back to the built-in
    quizQuestions array above if the tables are empty/unreachable. */
+function applyQuizRows(rows){
+  const rebuilt = rows.map(r => ({
+    q: r.question,
+    options: [...(r.quiz_options || [])]
+      .sort((a, b) => a.sort_order - b.sort_order)
+      .map(o => ({ t: o.option_text, v: o.value }))
+  })).filter(q => q.options.length > 0);
+  if (rebuilt.length) quizQuestions = rebuilt;
+}
 async function loadQuizFromSupabase(){
   if (!backendReady()) return;
+  await Promise.resolve(); // wait until the whole script has run (quizQuestions is declared further down)
+  const cachedQuiz = readCache(QUIZ_CACHE_KEY);
+  if (cachedQuiz && cachedQuiz.length) applyQuizRows(cachedQuiz);
   try{
     const res = await fetch(
       `${SUPABASE_URL}/rest/v1/quiz_questions?select=id,question,sort_order,quiz_options(option_text,value,sort_order)&order=sort_order.asc`,
@@ -1838,13 +1936,8 @@ async function loadQuizFromSupabase(){
     if (!res.ok) throw new Error('Quiz fetch failed: ' + res.status);
     const rows = await res.json();
     if (!rows.length) return;
-    const rebuilt = rows.map(r => ({
-      q: r.question,
-      options: [...r.quiz_options]
-        .sort((a, b) => a.sort_order - b.sort_order)
-        .map(o => ({ t: o.option_text, v: o.value }))
-    })).filter(q => q.options.length > 0);
-    if (rebuilt.length) quizQuestions = rebuilt;
+    writeCache(QUIZ_CACHE_KEY, rows);
+    applyQuizRows(rows);
   } catch(err){ console.warn('[Quiz CMS] falling back to built-in questions —', err); }
 }
 loadQuizFromSupabase();
@@ -1909,34 +2002,86 @@ const heroLine = document.getElementById('heroLine');
 const heroDetailBtn = document.getElementById('heroDetailBtn');
 let activeIndex = 0;
 
+/* Plain-JS HSL helpers (no three.js dependency, so the page doesn't have to
+   wait for the 600KB WebGL library before it can render colors). */
+function hexToHsl(hex){
+  let h = hex.replace('#','');
+  if (h.length === 3) h = h.split('').map(x => x + x).join('');
+  const r = parseInt(h.slice(0,2),16)/255, g = parseInt(h.slice(2,4),16)/255, b = parseInt(h.slice(4,6),16)/255;
+  const max = Math.max(r,g,b), min = Math.min(r,g,b), l = (max + min) / 2;
+  let hue = 0, sat = 0;
+  if (max !== min){
+    const d = max - min;
+    sat = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    if (max === r) hue = (g - b) / d + (g < b ? 6 : 0);
+    else if (max === g) hue = (b - r) / d + 2;
+    else hue = (r - g) / d + 4;
+    hue /= 6;
+  }
+  return { h: hue, s: sat, l };
+}
+function hslToHex(h, s, l){
+  const f = n => {
+    const k = (n + h * 12) % 12, a = s * Math.min(l, 1 - l);
+    const c = l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1));
+    return Math.round(c * 255).toString(16).padStart(2, '0');
+  };
+  return '#' + f(0) + f(8) + f(4);
+}
 function vividHex(hex, sat, light){
-  const c = new THREE.Color(hex);
-  const hsl = {}; c.getHSL(hsl);
-  c.setHSL(hsl.h, Math.max(hsl.s, sat != null ? sat : 0.72), light != null ? light : 0.56);
-  return '#' + c.getHexString();
+  const hsl = hexToHsl(hex);
+  return hslToHex(hsl.h, Math.max(hsl.s, sat != null ? sat : 0.72), light != null ? light : 0.56);
 }
 
-compositions.forEach((c, i) => {
+/* three.js is loaded on demand, after the page is already usable. */
+let threeLoading = null;
+function loadThree(){
+  if (window.THREE) return Promise.resolve();
+  if (threeLoading) return threeLoading;
+  threeLoading = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+    s.async = true;
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+  return threeLoading;
+}
+
+/* Built as a function so it can be rebuilt when specimens are added/removed in admin */
+function buildHeroList(){
+  heroList.innerHTML = '';
+  compositions.forEach((c, i) => {
   const item = document.createElement('div');
-  item.className = 'item' + (i === 0 ? ' active' : '');
+  item.className = 'item' + (i === activeIndex ? ' active' : '');
   item.style.setProperty('--item-accent', vividHex(c.accent));
   item.innerHTML = `
     <span class="t" style="animation-delay:${0.15 + i * 0.06}s">${c.name}</span>
     <span class="tag" style="animation-delay:${0.25 + i * 0.06}s">No. ${c.n}</span>
   `;
+  item.setAttribute('role', 'button');
+  item.setAttribute('tabindex', '0');
+  item.setAttribute('aria-pressed', i === activeIndex ? 'true' : 'false');
   item.addEventListener('click', () => setActive(i));
+  item.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); setActive(i); } });
   item.addEventListener('mouseenter', () => { if (voidField && i !== activeIndex) voidField.setAccent(c.accent); });
   item.addEventListener('mouseleave', () => { if (voidField) voidField.setAccent(compositions[activeIndex].accent); });
   heroList.appendChild(item);
 });
+}
+buildHeroList();
 
 /* ---- VOID FIELD (WebGL predictive-arc particle background) ---- */
 let voidField = null;
-try {
-  voidField = initVoidField(document.getElementById('voidCanvas'), compositions[0].accent);
-} catch (err) {
-  console.warn('Void Field unavailable, falling back to flat dark hero.', err);
-}
+loadThree().then(() => {
+  try {
+    voidField = initVoidField(document.getElementById('voidCanvas'), compositions[activeIndex].accent);
+    if (document.body.getAttribute('data-hero-bg') === 'light') voidField.setMode('light');
+  } catch (err) {
+    console.warn('Void Field unavailable, falling back to flat dark hero.', err);
+  }
+}).catch(err => console.warn('three.js failed to load — flat hero background.', err));
 
 function boostAccent(hex){
   const c = new THREE.Color(hex);
@@ -2098,7 +2243,10 @@ function initVoidField(canvas, initialColorHex){
 
 function setActive(i){
   activeIndex = i;
-  [...heroList.children].forEach((it, idx) => it.classList.toggle('active', idx === i));
+  [...heroList.children].forEach((it, idx) => {
+    it.classList.toggle('active', idx === i);
+    it.setAttribute('aria-pressed', idx === i ? 'true' : 'false');
+  });
   heroLine.textContent = compositions[i].line;
   heroLine.classList.add('show');
   heroDetailBtn.classList.add('show');
@@ -2112,6 +2260,16 @@ function setActive(i){
 /* Per-variant hero background: a variant with its own hero photo (set in
    admin) replaces the particle animation and drops the dark left gradient;
    a variant without one keeps the animation + gradient as before. */
+/* The theme the visitor picked with the BG toggle. A variant with its own
+   photo forces the hero to light mode; leaving it restores this choice. */
+let heroUserMode = 'dark';
+function setHeroMode(mode){
+  document.body.setAttribute('data-hero-bg', mode);
+  const btn = document.getElementById('bgToggle');
+  if (btn) btn.textContent = mode === 'light' ? 'BG: Light' : 'BG: Dark';
+  if (voidField) voidField.setMode(mode);
+}
+
 function applyHeroBg(c){
   const hero = document.getElementById('hero');
   const img = document.getElementById('heroBgPhoto');
@@ -2119,8 +2277,10 @@ function applyHeroBg(c){
     if (img.getAttribute('src') !== c.heroBgPhoto) img.src = c.heroBgPhoto;
     img.alt = c.name;
     hero.classList.add('photo-active');
+    setHeroMode('light');
   } else {
     hero.classList.remove('photo-active');
+    setHeroMode(heroUserMode);
   }
 }
 
@@ -2147,12 +2307,9 @@ setActive(0);
 heroDetailBtn.addEventListener('click', () => openOverlay(compositions[activeIndex]));
 
 function toggleHeroBg(){
-  const body = document.body;
-  const isLight = body.getAttribute('data-hero-bg') === 'light';
-  const newMode = isLight ? 'dark' : 'light';
-  body.setAttribute('data-hero-bg', newMode);
-  document.getElementById('bgToggle').textContent = isLight ? 'BG: Dark' : 'BG: Light';
-  if (voidField) voidField.setMode(newMode);
+  const isLight = document.body.getAttribute('data-hero-bg') === 'light';
+  heroUserMode = isLight ? 'dark' : 'light';
+  setHeroMode(heroUserMode);
 }
 
 /* iOS Safari ignores `overflow:hidden` on <body>, so modals need a position-fixed
@@ -2193,16 +2350,16 @@ function openOverlay(c){
   document.getElementById('ovShop').innerHTML = `
     <div class="price">${c.price}</div>
     <div class="meta"><span>${c.size}</span><span>${c.type}</span><span>${c.stock}</span></div>
-    <button id="ovAddBtn">Add to Bag</button>
+    <button id="ovAddBtn">Buy on Shopee ↗</button>
   `;
   document.getElementById('ovAddBtn').addEventListener('click', () => {
     trackProductClick(c, 'add_to_bag');
     const btn = document.getElementById('ovAddBtn');
     if (c.shopeeUrl){
-      window.open(c.shopeeUrl, '_blank', 'noopener');
+      window.open(shopeeLink(c), '_blank', 'noopener');
     } else {
       btn.textContent = 'Link belum tersedia';
-      setTimeout(() => { btn.textContent = 'Add to Bag'; }, 1800);
+      setTimeout(() => { btn.textContent = 'Buy on Shopee ↗'; }, 1800);
     }
   });
   document.getElementById('overlayPanel').classList.add('open');
@@ -2231,6 +2388,7 @@ function ribbonDiv(c){
   return `<div class="ribbon-wrap" style="--amb-accent:${accent}"><canvas class="ribbon-canvas" data-accent="${accent}"></canvas></div>`;
 }
 function initRibbons(container){
+  if (!window.THREE){ loadThree().then(() => initRibbons(container)).catch(() => {}); return; }
   container.querySelectorAll('.ribbon-canvas:not([data-inited])').forEach(cv => {
     cv.dataset.inited = '1';
     try {
@@ -2370,7 +2528,7 @@ function renderCatalogGrid(items){
     // the shoot is delivered. Swap the per-variant `photo` field to split them out.
     if (c.comingSoon){
       card.innerHTML =
-        '<div class="product-media">' +
+        '<div class="product-media" role="button" tabindex="0" aria-label="View ' + c.name + '">' +
           '<span class="product-index">' + c.n + '</span>' +
           '<span class="product-stock limited">Restricted</span>' +
           '<img src="' + c.photo + '" alt="' + c.name + ' reagent file" width="896" height="1200" loading="lazy" decoding="async">' +
@@ -2391,7 +2549,7 @@ function renderCatalogGrid(items){
       });
     } else {
       card.innerHTML =
-        '<div class="product-media">' +
+        '<div class="product-media" role="button" tabindex="0" aria-label="View ' + c.name + '">' +
           '<span class="product-index">' + c.n + '</span>' +
           '<span class="product-stock' + (c.stock !== 'Available' ? ' limited' : '') + '">' + c.stock + '</span>' +
           '<img src="' + c.photo + '" alt="' + c.name + ' bottle" width="896" height="1200" loading="lazy" decoding="async" style="object-position:' + (c.photoPosition || '50% 50%') + '">' +
@@ -2409,7 +2567,7 @@ function renderCatalogGrid(items){
             '<div><span>Defined Type</span><b>' + c.type + '</b></div>' +
             '<div><span>Status</span><b class="' + (c.stock === 'Available' ? 'status-active' : '') + '">' + c.stock + '</b></div>' +
           '</div>' +
-          '<button class="product-add">Add to Bag</button>' +
+          '<button class="product-add">Buy on Shopee ↗</button>' +
         '</div>';
       card.querySelector('.product-media').addEventListener('click', () => { trackProductClick(c, 'view'); openOverlay(c); });
       card.querySelector('h4').style.cursor = 'pointer';
@@ -2418,32 +2576,49 @@ function renderCatalogGrid(items){
       addBtn.addEventListener('click', () => {
         trackProductClick(c, 'add_to_bag');
         if (c.shopeeUrl){
-          window.open(c.shopeeUrl, '_blank', 'noopener');
+          window.open(shopeeLink(c), '_blank', 'noopener');
         } else {
           addBtn.textContent = 'Link belum tersedia';
-          setTimeout(() => { addBtn.textContent = 'Add to Bag'; }, 1800);
+          setTimeout(() => { addBtn.textContent = 'Buy on Shopee ↗'; }, 1800);
         }
       });
     }
     grid.appendChild(card);
   });
 }
-renderCatalogGrid([...degreeSeries, ...fractionSeries]);
-initCatalogCMS();
+(function renderInitialCatalog(){
+  const cached = readCache(CATALOG_CACHE_KEY);
+  if (cached && cached.length){
+    if (applyCatalogRows(cached)) buildHeroList();   // layering chips are built later from the same data
+    applyHeroItemStyles();
+    setActive(activeIndex);
+  } else if (backendReady()){
+    // first visit: keep the grid invisible until live content arrives (max 3s) instead of flashing defaults
+    shopGridDegree.classList.add('cms-pending');
+    shopGridFraction.classList.add('cms-pending');
+    setTimeout(() => document.querySelectorAll('.cms-pending').forEach(el => el.classList.remove('cms-pending')), 3000);
+  }
+  renderCatalogGrid(compositions);
+  initCatalogCMS();
+})();
 
 /* ---- THE FORMULA (layering tool) ---- */
 const layerChips = document.getElementById('layerChips');
 const layerResult = document.getElementById('layerResult');
 let layerSelected = [];
 
-compositions.forEach((c, i) => {
-  const chip = document.createElement('button');
-  chip.className = 'layer-chip';
-  chip.style.setProperty('--chip-accent', vividHex(c.accent));
-  chip.innerHTML = `<span class="dot"></span>${c.name}`;
-  chip.addEventListener('click', () => toggleLayer(i, chip));
-  layerChips.appendChild(chip);
-});
+function buildLayerChips(){
+  layerChips.innerHTML = '';
+  compositions.forEach((c, i) => {
+    const chip = document.createElement('button');
+    chip.className = 'layer-chip';
+    chip.style.setProperty('--chip-accent', vividHex(c.accent));
+    chip.innerHTML = `<span class="dot"></span>${c.name}`;
+    chip.addEventListener('click', () => toggleLayer(i, chip));
+    layerChips.appendChild(chip);
+  });
+}
+buildLayerChips();
 
 function toggleLayer(i, chipEl){
   const idx = layerSelected.indexOf(i);
@@ -2717,6 +2892,8 @@ const featuredBlock = document.getElementById('featuredBlock');
 let featuredIndex = 0;
 
 function renderFeatured(i, animate){
+  if (!compositions.length) return;
+  i = ((i % compositions.length) + compositions.length) % compositions.length;
   const c = compositions[i];
   const apply = () => {
     featuredVisual.querySelector('.f-photo')?.remove();
@@ -2881,6 +3058,7 @@ const fieldNotes = [
     legend.querySelectorAll('span').forEach((el, i) => el.classList.toggle('selected', i === idx));
     scanTo(idx);
     const c = compositions[idx];
+    if (!c) return;
     detail.innerHTML = `
       <div><div class="cd-k">Top</div><div class="cd-v">${c.notes[0]}</div></div>
       <div><div class="cd-k">Middle</div><div class="cd-v">${c.notes[1]}</div></div>
@@ -2908,7 +3086,8 @@ const fieldNotes = [
   fieldNotes.forEach((fn, i) => {
     const entry = document.createElement('div');
     entry.className = 'fn-entry';
-    const accent = vividHex(compositions[i].accent);
+    const src = compositions[i % compositions.length];
+    const accent = vividHex(src ? src.accent : '#E8402C');
     entry.style.borderTop = `2px solid ${accent}`;
     entry.innerHTML = `
       <div class="fn-meta">
@@ -3206,9 +3385,9 @@ function renderQuizLeadForm(){
       <div class="quiz-qnum">One last step</div>
       <div class="quiz-question">Where should we send your match?</div>
       <div class="quiz-lead-form">
-        <input type="text" id="qlName" placeholder="Your name" autocomplete="name">
-        <input type="text" id="qlIg" placeholder="Instagram handle" autocomplete="off">
-        <input type="email" id="qlEmail" placeholder="Email address" autocomplete="email">
+        <input type="text" id="qlName" placeholder="Your name" autocomplete="name" maxlength="80">
+        <input type="text" id="qlIg" placeholder="Instagram handle" autocomplete="off" maxlength="40">
+        <input type="email" id="qlEmail" placeholder="Email address" autocomplete="email" maxlength="200"><input type="text" class="hp-field" tabindex="-1" autocomplete="off" aria-hidden="true" name="website" id="qlHp">
       </div>
       <div class="quiz-lead-note" id="qlNote">Used only to send your match and news on new specimens.</div>
       <button class="qa-primary" id="qlSubmit" type="button">Reveal my match →</button>
@@ -3233,6 +3412,7 @@ async function submitQuizLead(){
   const btn = document.getElementById('qlSubmit');
   btn.disabled = true;
   btn.textContent = 'Submitting…';
+  if (document.getElementById('qlHp').value){ swapQuizBody(renderQuizLoading); return; }
   await supabaseInsert('quiz_leads', {
     name, instagram: ig, email,
     matched_specimen: quizMatch.name,
@@ -3398,7 +3578,9 @@ async function submitNotify(){
   inp.value = '';
   inp.disabled = true;
   inp.placeholder = 'Submitting…';
-  await supabaseInsert('access_requests', { email, product_name: notifyProductName });
+  if (!document.getElementById('notifyHp').value){
+    await supabaseInsert('access_requests', { email, product_name: notifyProductName });
+  }
   inp.placeholder = 'Request received. We will be in touch.';
   setTimeout(() => { closeNotifyModal(); inp.disabled = false; }, 1600);
 }
@@ -3414,7 +3596,7 @@ document.getElementById('footForm').addEventListener('submit', async (e) => {
   inp.disabled = true;
   btn.disabled = true;
   btn.textContent = '…';
-  const ok = await supabaseInsert('newsletter_subscribers', { email });
+  const ok = document.getElementById('footHp').value ? true : await supabaseInsert('newsletter_subscribers', { email });
   btn.textContent = ok ? 'Subscribed ✓' : 'Try again';
   setTimeout(() => {
     btn.textContent = 'Subscribe'; inp.disabled = false; btn.disabled = false;
@@ -3507,7 +3689,7 @@ setTimeout(initSectionNav, 150);
     <h3>Get notified.</h3>
     <p>Leave your email and you will be the first to know when this composition is released from the lab.</p>
     <div class="notify-form">
-      <input type="email" placeholder="your@email.com" id="notifyEmail">
+      <input type="email" placeholder="your@email.com" id="notifyEmail" maxlength="200"><input type="text" class="hp-field" tabindex="-1" autocomplete="off" aria-hidden="true" name="website" id="notifyHp">
       <button onclick="submitNotify()">Submit →</button>
     </div>
   </div>
@@ -3515,9 +3697,9 @@ setTimeout(initSectionNav, 150);
 
 <!-- SECTION NAV -->
 <div class="section-nav" id="sectionNav">
-  <button class="snav-btn" id="snavUp" onclick="navSection(-1)" title="Previous section">↑</button>
+  <button class="snav-btn" id="snavUp" onclick="navSection(-1)" title="Previous section" aria-label="Previous section">↑</button>
   <div class="snav-dots" id="snavDots"></div>
-  <button class="snav-btn" id="snavDown" onclick="navSection(1)" title="Next section">↓</button>
+  <button class="snav-btn" id="snavDown" onclick="navSection(1)" title="Next section" aria-label="Next section">↓</button>
 </div>
 
 </body>

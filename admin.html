@@ -101,98 +101,99 @@
   .activity-row .txt span{color:var(--muted);}
   .activity-row .time{font-family:var(--mono); font-size:10px; color:var(--muted); white-space:nowrap;}
 
-  /* ---------- CATALOG CARDS ---------- */
-  .cat-grid{display:flex; flex-direction:column; gap:1px; background:var(--line);}
-  .cat-card{background:var(--bg); padding:24px; display:grid; grid-template-columns:200px 1fr; gap:24px;}
-  @media(max-width:700px){ .cat-card{grid-template-columns:1fr;} }
-  .cat-photo-frame{width:200px; height:250px; overflow:hidden; background:#1a1a17; border:1px solid var(--line); position:relative;}
-  .cat-photo-frame img{width:100%; height:100%; object-fit:cover;}
-  .cat-photo-wrap{display:flex; flex-direction:column; gap:10px;}
-  .cat-photo-wrap input[type=file]{font-size:11px; font-family:var(--mono); color:var(--muted);}
+  /* ---------- CATALOG (list + editor) ---------- */
+  .field-label{font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:4px; display:block;}
+  .cat-layout{display:grid; grid-template-columns:250px 1fr; border:1px solid var(--line); min-height:560px;}
+  .cat-list{border-right:1px solid var(--line); display:flex; flex-direction:column;}
+  .cat-list-head{display:flex; justify-content:space-between; align-items:center; padding:14px 16px; border-bottom:1px solid var(--line);}
+  .cat-list-head span{font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted);}
+  .cat-list-head button, .cat-mobile-bar button{background:none; border:1px solid var(--line); color:var(--ink); padding:5px 10px; font-family:var(--mono); font-size:10px; text-transform:uppercase; cursor:pointer;}
+  .cat-list-head button:hover, .cat-mobile-bar button:hover{border-color:var(--ink);}
+  .cat-list-item{display:flex; gap:12px; align-items:center; padding:11px 16px; cursor:pointer; border-left:2px solid transparent;}
+  .cat-list-item:hover{background:rgba(243,240,232,.03);}
+  .cat-list-item.active{background:var(--card); border-left-color:var(--oxide);}
+  .cat-list-thumb{width:34px; height:42px; object-fit:cover; background:#1a1a17; flex-shrink:0;}
+  .cat-list-meta{flex:1; min-width:0;}
+  .cat-list-meta .nm{font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .cat-list-meta .sub{font-family:var(--mono); font-size:10px; color:var(--muted); margin-top:2px;}
+  .status-dot{width:7px; height:7px; border-radius:50%; flex-shrink:0; background:var(--ok);}
+  .status-dot.out{background:var(--oxide);}
+  .status-dot.soon{background:rgba(243,240,232,.3);}
+  .cat-mobile-bar{display:none; gap:10px; padding:12px; border-bottom:1px solid var(--line);}
+  .cat-mobile-bar select{flex:1; background:var(--card); border:1px solid var(--line); color:var(--ink); font-family:var(--sans); font-size:16px; padding:8px;}
+
+  .cat-editor{display:flex; flex-direction:column; min-width:0;}
+  .cat-ed-head{display:flex; justify-content:space-between; align-items:center; gap:12px; padding:16px 22px; border-bottom:1px solid var(--line);}
+  .cat-ed-head .ttl{font-family:var(--display); font-size:20px;}
+  .cat-ed-head .meta{font-family:var(--mono); font-size:10px; color:var(--muted); margin-left:8px;}
+  .dirty-flag{font-family:var(--mono); font-size:10px; color:#E8B84C; visibility:hidden;}
+  .dirty-flag.on{visibility:visible;}
+  .cat-subtabs{display:flex; padding:0 22px; border-bottom:1px solid var(--line); overflow-x:auto;}
+  .cat-subtab{background:none; border:none; border-bottom:2px solid transparent; color:var(--muted); padding:12px 14px; font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.05em; cursor:pointer; white-space:nowrap;}
+  .cat-subtab.active{color:var(--ink); border-bottom-color:var(--oxide);}
+  .cat-pane{display:none; padding:22px; flex:1;}
+  .cat-pane.active{display:block;}
+  .cat-grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  .cat-grid2 .full{grid-column:1/-1;}
+  .cat-editor input[type=text], .cat-editor textarea{
+    width:100%; background:var(--card); border:1px solid var(--line); outline:none;
+    font-family:var(--sans); font-size:13px; color:var(--ink); padding:9px 10px;
+  }
+  .cat-editor input[type=text]:focus, .cat-editor textarea:focus{border-color:var(--ink);}
+  .cat-editor textarea{resize:vertical; min-height:80px; line-height:1.5;}
+  .cat-editor input[type=file]{font-size:11px; font-family:var(--mono); color:var(--muted);}
+  .cat-editor label.chk{display:flex; align-items:center; gap:8px; font-size:12px; font-family:var(--mono); cursor:pointer;}
+  .chip-row{display:flex; gap:6px; margin-top:6px;}
+  .chip{background:none; border:1px solid var(--line); color:var(--muted); padding:4px 9px; font-family:var(--mono); font-size:10px; text-transform:uppercase; cursor:pointer;}
+  .chip:hover{color:var(--ink); border-color:var(--ink);}
+  .pane-section{border:1px solid var(--line); padding:16px; margin-bottom:16px;}
+  .pane-section:last-child{margin-bottom:0;}
+  .pane-section-h{font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink); margin-bottom:4px;}
+  .pane-section-d{font-size:12px; color:var(--muted); margin-bottom:14px; line-height:1.5;}
+  .photo-row{display:flex; gap:18px; align-items:flex-start;}
+  .photo-frame{width:160px; height:200px; overflow:hidden; background:#1a1a17; border:1px solid var(--line); flex-shrink:0;}
+  .photo-frame img{width:100%; height:100%; object-fit:cover;}
+  .photo-controls{flex:1; display:flex; flex-direction:column; gap:12px; min-width:0;}
   .pos-sliders{display:flex; flex-direction:column; gap:6px;}
   .pos-sliders label{font-family:var(--mono); font-size:9px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); display:flex; justify-content:space-between;}
   .pos-sliders input[type=range]{width:100%; accent-color:var(--oxide);}
-  .stock-toggle{
-    display:flex; align-items:center; gap:8px; border:1px solid var(--line); padding:8px 10px; cursor:pointer;
-    font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.04em;
-  }
-  .stock-toggle .dot{width:7px; height:7px; border-radius:50%; background:var(--ok);}
-  .stock-toggle.sold-out .dot{background:var(--oxide);}
-  .cat-fields{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
-  .cat-fields .full{grid-column:1/-1;}
-  .field-label{font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:4px; display:block;}
-  .cat-fields input, .cat-fields textarea{
-    width:100%; background:var(--card); border:1px solid var(--line); outline:none;
-    font-family:var(--sans); font-size:13px; color:var(--ink); padding:8px 10px;
-  }
-  .cat-fields input:focus, .cat-fields textarea:focus{border-color:var(--ink);}
-  .cat-fields textarea{resize:vertical; min-height:56px;}
-  .cat-fields label.chk{display:flex; align-items:center; gap:8px; font-size:12px; font-family:var(--mono);}
-  .cat-save-row{grid-column:1/-1; display:flex; align-items:center; gap:12px; margin-top:4px;}
-  .cat-save-row button{
-    background:var(--ink); color:var(--bg); border:none; padding:9px 18px;
-    font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.06em; cursor:pointer;
-  }
-  .cat-save-row button:hover{background:var(--oxide); color:#fff;}
-  .cat-save-row .status{font-family:var(--mono); font-size:11px; color:var(--muted);}
-  .cat-save-row .status.ok{color:var(--ok);}
-  .cat-save-row .status.err{color:var(--oxide);}
-  .cat-save-row .delete-btn{background:none; border:1px solid var(--line); color:var(--oxide); margin-left:auto;}
-  .cat-save-row .delete-btn:hover{border-color:var(--oxide); background:rgba(232,64,44,.1);}
-
-  /* ---------- HERO (per variant) ---------- */
-  .hero-block{border:1px solid var(--line); padding:14px;}
-  .hero-color-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;}
-  @media(max-width:700px){ .hero-color-grid{grid-template-columns:1fr;} }
+  .radio-row{display:flex; gap:18px; margin-bottom:12px;}
+  .sub-row{display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+  .sub-row .hint{font-family:var(--mono); font-size:9px; color:var(--muted);}
+  .color-swatch{width:44px; height:32px; border:1px solid var(--line); background:none; cursor:pointer; padding:0;}
+  .color-swatch:disabled{opacity:.25; cursor:not-allowed;}
+  .hero-color-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;}
   .hero-color-row{display:flex; align-items:center; gap:8px; font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); cursor:pointer;}
   .hero-color-row span{flex:1;}
-  .hero-color-row input[type=color]{width:40px; height:28px; border:1px solid var(--line); background:none; cursor:pointer; padding:0;}
-  .hero-color-row input[type=color]:disabled{opacity:.25; cursor:not-allowed;}
-  .hero-bg-row{display:flex; gap:14px; align-items:flex-start;}
-  .hero-bg-preview{width:140px; aspect-ratio:16/9; flex-shrink:0; border:1px solid var(--line); background:#1a1a17; display:flex; align-items:center; justify-content:center; overflow:hidden;}
+  .hero-bg-preview{width:160px; aspect-ratio:16/9; flex-shrink:0; border:1px solid var(--line); background:#1a1a17; display:flex; align-items:center; justify-content:center; overflow:hidden;}
   .hero-bg-preview img{width:100%; height:100%; object-fit:cover;}
   .hero-bg-preview span{font-family:var(--mono); font-size:9px; color:var(--muted); text-align:center; padding:6px;}
-  .hero-bg-actions{display:flex; flex-direction:column; gap:8px; flex:1; min-width:0;}
-  .hero-bg-actions input[type=file]{font-size:11px; font-family:var(--mono); color:var(--muted);}
-  .hero-bg-remove{align-self:flex-start; background:none; border:1px solid var(--line); color:var(--oxide); padding:5px 10px; font-family:var(--mono); font-size:10px; text-transform:uppercase; cursor:pointer;}
-  .hero-bg-remove:disabled{opacity:.3; cursor:not-allowed;}
-  .hero-bg-note{font-family:var(--mono); font-size:9px; color:var(--muted); line-height:1.5;}
+  .link-danger{background:none; border:1px solid var(--line); color:var(--oxide); padding:5px 10px; font-family:var(--mono); font-size:10px; text-transform:uppercase; cursor:pointer; align-self:flex-start;}
+  .link-danger:hover{border-color:var(--oxide); background:rgba(232,64,44,.1);}
+  .link-danger:disabled{opacity:.3; cursor:not-allowed;}
 
-  /* ---------- QUIZ EDITOR ---------- */
-  .quiz-q-card{background:var(--card); border:1px solid var(--line); padding:20px; margin-bottom:16px;}
-  .quiz-q-head{display:flex; gap:10px; align-items:flex-start; margin-bottom:16px;}
-  .quiz-q-head textarea{
-    flex:1; background:var(--bg); border:1px solid var(--line); outline:none; color:var(--ink);
-    font-family:var(--sans); font-size:14px; padding:10px; resize:vertical; min-height:44px;
+  .cat-ed-foot{position:sticky; bottom:0; background:var(--bg); display:flex; justify-content:space-between; align-items:center; gap:12px; padding:14px 22px; border-top:1px solid var(--line);}
+  .cat-ed-foot .right{display:flex; gap:10px; align-items:center;}
+  .cat-ed-foot .status{font-family:var(--mono); font-size:11px; color:var(--muted);}
+  .cat-ed-foot .status.ok{color:var(--ok);}
+  .cat-ed-foot .status.err{color:var(--oxide);}
+  .btn-ghost{background:none; border:1px solid var(--line); color:var(--ink); padding:9px 14px; font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.05em; cursor:pointer;}
+  .btn-ghost:hover{border-color:var(--ink);}
+  .btn-primary{background:var(--ink); color:var(--bg); border:none; padding:9px 18px; font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.06em; cursor:pointer;}
+  .btn-primary:hover{background:var(--oxide); color:#fff;}
+  .btn-primary:disabled, .btn-ghost:disabled{opacity:.35; cursor:not-allowed;}
+  .cat-empty{padding:60px 22px; text-align:center; font-family:var(--mono); font-size:12px; color:var(--muted);}
+
+  @media(max-width:800px){
+    main{padding:24px 4vw 80px;}
+    .cat-layout{grid-template-columns:1fr;}
+    .cat-list{display:none;}
+    .cat-mobile-bar{display:flex;}
+    .cat-grid2, .hero-color-grid{grid-template-columns:1fr;}
+    .photo-row{flex-direction:column;}
+    .cat-ed-head, .cat-pane, .cat-ed-foot{padding-left:14px; padding-right:14px;}
+    .cat-subtabs{padding:0 6px;}
   }
-  .quiz-q-head textarea:focus{border-color:var(--ink);}
-  .quiz-opt-row{display:flex; gap:8px; align-items:center; margin-bottom:8px;}
-  .quiz-opt-row input[type=text]{
-    flex:1; background:var(--bg); border:1px solid var(--line); outline:none; color:var(--ink);
-    font-family:var(--sans); font-size:13px; padding:8px 10px;
-  }
-  .quiz-opt-row select{
-    background:var(--bg); border:1px solid var(--line); outline:none; color:var(--ink);
-    font-family:var(--mono); font-size:11px; padding:8px 6px; text-transform:uppercase;
-  }
-  .quiz-opt-row input:focus, .quiz-opt-row select:focus{border-color:var(--ink);}
-  .quiz-opt-row button{
-    background:none; border:1px solid var(--line); color:var(--oxide); padding:6px 10px;
-    font-family:var(--mono); font-size:10px; cursor:pointer;
-  }
-  .quiz-opt-row button:hover{border-color:var(--oxide);}
-  .quiz-q-actions{display:flex; gap:10px; align-items:center; margin-top:14px; padding-top:14px; border-top:1px solid var(--line);}
-  .quiz-q-actions button{
-    background:none; border:1px solid var(--line); color:var(--ink); padding:8px 14px;
-    font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.04em; cursor:pointer;
-  }
-  .quiz-q-actions button:hover{border-color:var(--ink);}
-  .quiz-q-actions .save-q-btn{background:var(--ink); color:var(--bg); border:none;}
-  .quiz-q-actions .save-q-btn:hover{background:var(--oxide); color:#fff;}
-  .quiz-q-actions .delete-q-btn{color:var(--oxide);}
-  .quiz-q-actions .delete-q-btn:hover{border-color:var(--oxide); background:rgba(232,64,44,.1);}
-  .quiz-q-actions .status{font-family:var(--mono); font-size:11px; color:var(--muted);}
-  .quiz-q-actions .status.ok{color:var(--ok);}
 
   /* ---------- LEADS (merged: quiz / newsletter / access) ---------- */
   .subtabs{display:flex; gap:8px; margin-bottom:24px;}
@@ -325,9 +326,17 @@
 
     <!-- CATALOG -->
     <div class="panel" id="panel-catalog">
-      <div class="toolbar"><div></div><button id="addSpecimenBtn">+ Add New Specimen</button></div>
       <div class="loading-note" id="catalogLoading">Loading catalog…</div>
-      <div class="cat-grid" id="catalogGrid"></div>
+      <div class="cat-layout">
+        <aside class="cat-list">
+          <div class="cat-list-head"><span id="catCount">Specimens</span><button type="button" id="addSpecimenBtn">+ New</button></div>
+          <div id="catListItems"></div>
+        </aside>
+        <section class="cat-editor-wrap">
+          <div class="cat-mobile-bar"><select id="catMobileSelect" aria-label="Choose specimen"></select><button type="button" id="addSpecimenBtnMobile">+ New</button></div>
+          <div class="cat-editor" id="catEditor"></div>
+        </section>
+      </div>
     </div>
 
     <!-- LEADS (merged) -->
@@ -434,6 +443,12 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => activateTab(btn.dataset.tab));
 });
 function activateTab(tab){
+  const current = (document.querySelector('.tab-btn.active') || {}).dataset?.tab;
+  if (current === 'catalog' && tab !== 'catalog' && catDirty){
+    if (!confirm('Ada perubahan katalog yang belum disimpan. Buang perubahan ini?')) return;
+    const item = catalogItems.find(x => x.n === selectedN);
+    if (item) renderEditor(item);
+  }
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.getElementById('panel-' + tab).classList.add('active');
@@ -452,7 +467,14 @@ document.querySelectorAll('.subtab-btn').forEach(btn => {
   });
 });
 
-function esc(v){ return (v || '').toString().replace(/"/g, '&quot;'); }
+/* Escapes every HTML-significant character. Anything that came from the
+   database (including public form submissions like quiz names) goes through
+   this before being put into the page, so it can never run as code. */
+function esc(v){
+  return (v == null ? '' : String(v))
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
 function fmtDate(d){ return new Date(d).toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' }); }
 function fmtDateTime(d){ return new Date(d).toLocaleString('id-ID', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }); }
 
@@ -580,237 +602,374 @@ async function renderActivityFeed(leads, subs, events){
   `).join('') || '<div class="empty-note">Belum ada aktivitas di periode ini.</div>';
 }
 
-/* ---------- CATALOG ---------- */
-async function loadCatalog(){
-  const grid = document.getElementById('catalogGrid');
+/* ---------- CATALOG (list + editor) ---------- */
+let catalogItems = [];
+let selectedN = null;
+let catDirty = false;
+let catSubtab = 'basics';
+
+function catStatus(item){
+  if (item.coming_soon) return 'soon';
+  if ((item.stock || '').toLowerCase().includes('sold')) return 'out';
+  return 'ok';
+}
+
+async function loadCatalog(preferN){
   const loading = document.getElementById('catalogLoading');
   const { data, error } = await sb.from('catalog_items').select('*').order('sort_order');
   loading.style.display = 'none';
-  if (error){ grid.innerHTML = `<div class="empty-note">Gagal load katalog: ${error.message}</div>`; return; }
-  if (!data.length){ grid.innerHTML = `<div class="empty-note">Belum ada data.</div>`; return; }
-  grid.innerHTML = '';
-  data.forEach(item => grid.appendChild(renderCatalogCard(item)));
+  if (error){ document.getElementById('catEditor').innerHTML = `<div class="cat-empty">Gagal load katalog: ${esc(error.message)}</div>`; return; }
+  catalogItems = data || [];
+  renderCatList();
+  const pick = [preferN, selectedN].find(n => n && catalogItems.some(x => x.n === n)) || (catalogItems[0] && catalogItems[0].n);
+  if (pick) selectSpecimen(pick, true);
+  else document.getElementById('catEditor').innerHTML = '<div class="cat-empty">Belum ada specimen. Klik "+ New" untuk menambah.</div>';
 }
 
-function renderCatalogCard(item){
-  const card = document.createElement('div');
-  card.className = 'cat-card';
-  const isSoldOut = (item.stock || '').toLowerCase().includes('sold');
+function renderCatList(){
+  document.getElementById('catCount').textContent = `Specimens · ${catalogItems.length}`;
+  document.getElementById('catListItems').innerHTML = catalogItems.map(item => `
+    <div class="cat-list-item ${item.n === selectedN ? 'active' : ''}" data-n="${esc(item.n)}">
+      <img class="cat-list-thumb" src="${esc(item.photo_url)}" alt="" onerror="this.style.visibility='hidden'">
+      <div class="cat-list-meta">
+        <div class="nm">${esc(item.name) || item.n}</div>
+        <div class="sub">${item.coming_soon ? 'Coming soon' : (esc(item.price) || '–')}</div>
+      </div>
+      <span class="status-dot ${catStatus(item)}" title="${esc(item.stock)}"></span>
+    </div>`).join('');
+  document.querySelectorAll('.cat-list-item').forEach(el => el.addEventListener('click', () => selectSpecimen(el.dataset.n)));
+  const sel = document.getElementById('catMobileSelect');
+  sel.innerHTML = catalogItems.map(item => `<option value="${esc(item.n)}" ${item.n === selectedN ? 'selected' : ''}>${esc(item.name) || item.n}</option>`).join('');
+}
+
+function confirmDiscard(){
+  return !catDirty || confirm('Ada perubahan yang belum disimpan. Buang perubahan ini?');
+}
+
+function setDirty(on){
+  catDirty = on;
+  const flag = document.getElementById('catDirtyFlag');
+  if (flag) flag.classList.toggle('on', on);
+  const discard = document.getElementById('catDiscardBtn');
+  if (discard) discard.disabled = !on;
+}
+
+function selectSpecimen(n, force){
+  if (!force && n !== selectedN && !confirmDiscard()){
+    document.getElementById('catMobileSelect').value = selectedN;
+    return;
+  }
+  selectedN = n;
+  document.querySelectorAll('.cat-list-item').forEach(el => el.classList.toggle('active', el.dataset.n === n));
+  document.getElementById('catMobileSelect').value = n;
+  const item = catalogItems.find(x => x.n === n);
+  if (item) renderEditor(item);
+}
+
+function renderEditor(item){
+  const ed = document.getElementById('catEditor');
   const pos = (item.photo_position || '50% 50%').split(' ');
-  const posX = parseInt(pos[0]) || 50;
-  const posY = parseInt(pos[1]) || 50;
-  card.innerHTML = `
-    <div class="cat-photo-wrap">
-      <div class="cat-photo-frame"><img class="cat-photo" src="${item.photo_url || ''}" alt="${item.name || item.n}" style="object-position:${posX}% ${posY}%" onerror="this.style.opacity=0.2"></div>
-      <input type="file" accept="image/*" class="photo-input">
-      <div class="pos-sliders">
-        <label>Horizontal focus <span class="posx-val">${posX}%</span></label>
-        <input type="range" min="0" max="100" value="${posX}" class="pos-x-slider">
-        <label>Vertical focus <span class="posy-val">${posY}%</span></label>
-        <input type="range" min="0" max="100" value="${posY}" class="pos-y-slider">
-      </div>
-      <div class="stock-toggle ${isSoldOut ? 'sold-out' : ''}"><span class="dot"></span><span class="stock-label">${isSoldOut ? 'Sold Out' : 'Available'} (click to toggle)</span></div>
+  const posX = parseInt(pos[0]) || 50, posY = parseInt(pos[1]) || 50;
+  const isRibbon = item.overlay_bg_type === 'ribbon';
+  const tabs = [['basics','Basics'],['content','Content'],['photos','Photos'],['hero','Hero & Share']];
+
+  ed.innerHTML = `
+    <div class="cat-ed-head">
+      <div><span class="ttl">${esc(item.name) || item.n}</span><span class="meta">No. ${esc(item.n)} · ${esc(item.series)}</span></div>
+      <span class="dirty-flag" id="catDirtyFlag">● Unsaved changes</span>
     </div>
-    <div class="cat-fields">
-      <div class="full"><span class="field-label">Index — ${item.n} (${item.series})</span></div>
-      <div><span class="field-label">Name</span><input data-f="name" value="${esc(item.name)}"></div>
-      <div><span class="field-label">Price</span><input data-f="price" value="${esc(item.price)}"></div>
-      <div><span class="field-label">Size</span><input data-f="size" value="${esc(item.size)}"></div>
-      <div><span class="field-label">Type</span><input data-f="type" value="${esc(item.type)}"></div>
-      <div><span class="field-label">Stock</span><input data-f="stock" value="${esc(item.stock)}"></div>
-      <div><label class="chk"><input type="checkbox" data-f="coming_soon" ${item.coming_soon ? 'checked' : ''}> Coming Soon</label></div>
-      <div class="full"><span class="field-label">Shopee Link</span><input data-f="shopee_url" value="${esc(item.shopee_url)}" placeholder="https://shopee.co.id/..."></div>
-      <div class="full">
-        <span class="field-label">Overlay Background (shown when this specimen is clicked)</span>
-        <div style="display:flex; gap:16px; align-items:center; margin-bottom:8px;">
-          <label class="chk"><input type="radio" name="overlay-type-${item.n}" class="overlay-type-radio" value="photo" ${item.overlay_bg_type !== 'ribbon' ? 'checked' : ''}> Photo</label>
-          <label class="chk"><input type="radio" name="overlay-type-${item.n}" class="overlay-type-radio" value="ribbon" ${item.overlay_bg_type === 'ribbon' ? 'checked' : ''}> Ribbon Animation</label>
+    <div class="cat-subtabs">
+      ${tabs.map(([k,l]) => `<button type="button" class="cat-subtab ${catSubtab === k ? 'active' : ''}" data-sub="${k}">${l}</button>`).join('')}
+    </div>
+
+    <div class="cat-pane ${catSubtab === 'basics' ? 'active' : ''}" data-pane="basics">
+      <div class="cat-grid2">
+        <div><span class="field-label">Name</span><input type="text" data-f="name" value="${esc(item.name)}"></div>
+        <div><span class="field-label">Price</span><input type="text" data-f="price" value="${esc(item.price)}"></div>
+        <div><span class="field-label">Size</span><input type="text" data-f="size" value="${esc(item.size)}"></div>
+        <div><span class="field-label">Type</span><input type="text" data-f="type" value="${esc(item.type)}"></div>
+        <div>
+          <span class="field-label">Stock</span><input type="text" data-f="stock" value="${esc(item.stock)}">
+          <div class="chip-row">
+            <button type="button" class="chip" data-stock="Available">Available</button>
+            <button type="button" class="chip" data-stock="Sold Out">Sold Out</button>
+            <button type="button" class="chip" data-stock="Coming Soon">Coming Soon</button>
+          </div>
         </div>
-        <div class="overlay-photo-row" style="display:${item.overlay_bg_type === 'ribbon' ? 'none' : 'flex'}; gap:10px; align-items:center;">
-          <input type="file" accept="image/*" class="overlay-photo-input" style="flex:1;">
-          <span style="font-family:var(--mono); font-size:9px; color:var(--muted);">Optional — leave empty to reuse the catalog photo</span>
-        </div>
-        <div class="overlay-color-row" style="display:${item.overlay_bg_type === 'ribbon' ? 'flex' : 'none'}; gap:10px; align-items:center;">
-          <input type="color" class="overlay-color-input" value="${item.overlay_bg_color || item.accent || '#E8402C'}" style="width:44px; height:32px; border:1px solid var(--line); background:none; cursor:pointer;">
-          <span style="font-family:var(--mono); font-size:9px; color:var(--muted);">Custom color for the ribbon animation</span>
-        </div>
+        <div style="display:flex; align-items:center;"><label class="chk"><input type="checkbox" data-f="coming_soon" ${item.coming_soon ? 'checked' : ''}> Coming soon (Restricted card on site)</label></div>
+        <div class="full"><span class="field-label">Shopee link</span><input type="text" data-f="shopee_url" value="${esc(item.shopee_url)}" placeholder="https://shopee.co.id/..."></div>
       </div>
-      <div class="full hero-block">
-        <span class="field-label">Hero — shown in the variant list on the homepage</span>
-        <div class="hero-color-grid">
-          <label class="hero-color-row">
-            <input type="checkbox" class="hero-color-custom" data-which="inactive" ${item.hero_text_color ? 'checked' : ''}>
-            <span>Text color — before click</span>
-            <input type="color" class="hero-color-input" data-which="inactive" value="${item.hero_text_color || '#F3F0E8'}" ${item.hero_text_color ? '' : 'disabled'}>
-          </label>
-          <label class="hero-color-row">
-            <input type="checkbox" class="hero-color-custom" data-which="active" ${item.hero_text_color_active ? 'checked' : ''}>
-            <span>Text color — after click</span>
-            <input type="color" class="hero-color-input" data-which="active" value="${item.hero_text_color_active || '#E8402C'}" ${item.hero_text_color_active ? '' : 'disabled'}>
-          </label>
-        </div>
-        <div class="hero-bg-row">
-          <div class="hero-bg-preview">${item.hero_bg_photo_url ? `<img src="${item.hero_bg_photo_url}" alt="">` : '<span>No photo — particle animation</span>'}</div>
-          <div class="hero-bg-actions">
-            <input type="file" accept="image/*" class="hero-bg-input">
-            <button type="button" class="hero-bg-remove" ${item.hero_bg_photo_url ? '' : 'disabled'}>Remove photo</button>
-            <span class="hero-bg-note">With a photo, the dark left gradient is removed when this variant is selected.</span>
+    </div>
+
+    <div class="cat-pane ${catSubtab === 'content' ? 'active' : ''}" data-pane="content">
+      <div class="cat-grid2">
+        <div class="full"><span class="field-label">Tagline</span><input type="text" data-f="line" value="${esc(item.line)}"></div>
+        <div class="full"><span class="field-label">Description</span><textarea data-f="desc">${esc(item.desc)}</textarea></div>
+        <div class="full"><span class="field-label">Top notes</span><input type="text" data-f="notes_top" value="${esc(item.notes_top)}"></div>
+        <div class="full"><span class="field-label">Mid notes</span><input type="text" data-f="notes_mid" value="${esc(item.notes_mid)}"></div>
+        <div class="full"><span class="field-label">Base notes</span><input type="text" data-f="notes_base" value="${esc(item.notes_base)}"></div>
+      </div>
+    </div>
+
+    <div class="cat-pane ${catSubtab === 'photos' ? 'active' : ''}" data-pane="photos">
+      <div class="pane-section">
+        <div class="pane-section-h">Catalog photo</div>
+        <div class="pane-section-d">Shown on the product card, share card, and as the default overlay photo.</div>
+        <div class="photo-row">
+          <div class="photo-frame"><img id="edPhoto" src="${esc(item.photo_url)}" alt="" style="object-position:${posX}% ${posY}%" onerror="this.style.opacity=.2"></div>
+          <div class="photo-controls">
+            <input type="file" accept="image/*" id="edPhotoInput">
+            <div class="pos-sliders">
+              <label>Horizontal focus <span id="edPosXVal">${posX}%</span></label>
+              <input type="range" min="0" max="100" value="${posX}" id="edPosX">
+              <label>Vertical focus <span id="edPosYVal">${posY}%</span></label>
+              <input type="range" min="0" max="100" value="${posY}" id="edPosY">
+            </div>
           </div>
         </div>
       </div>
-      <div><span class="field-label">Share Card — Tagline</span><input data-f="share_tagline" value="${esc(item.share_tagline)}" placeholder="For the one who..."></div>
-      <div><span class="field-label">Share Card — Mood</span><input data-f="share_mood" value="${esc(item.share_mood)}" placeholder="Bold · Warm Wood · Unresolved"></div>
-      <div class="full"><span class="field-label">Tagline</span><input data-f="line" value="${esc(item.line)}"></div>
-      <div class="full"><span class="field-label">Description</span><textarea data-f="desc">${esc(item.desc)}</textarea></div>
-      <div><span class="field-label">Top Notes</span><input data-f="notes_top" value="${esc(item.notes_top)}"></div>
-      <div><span class="field-label">Mid Notes</span><input data-f="notes_mid" value="${esc(item.notes_mid)}"></div>
-      <div><span class="field-label">Base Notes</span><input data-f="notes_base" value="${esc(item.notes_base)}"></div>
-      <div class="cat-save-row"><button class="save-btn">Save Changes</button><span class="status"></span><button class="delete-btn" type="button">Delete Specimen</button></div>
+      <div class="pane-section">
+        <div class="pane-section-h">Overlay background</div>
+        <div class="pane-section-d">What fills the left side of the detail popup when this specimen is opened.</div>
+        <div class="radio-row">
+          <label class="chk"><input type="radio" name="edOverlayType" value="photo" ${isRibbon ? '' : 'checked'}> Photo</label>
+          <label class="chk"><input type="radio" name="edOverlayType" value="ribbon" ${isRibbon ? 'checked' : ''}> Ribbon animation</label>
+        </div>
+        <div class="sub-row" id="edOverlayPhotoRow" style="display:${isRibbon ? 'none' : 'flex'}">
+          <input type="file" accept="image/*" id="edOverlayInput">
+          <span class="hint">${item.overlay_photo_url ? 'Custom overlay photo set — upload to replace.' : 'Empty = uses the catalog photo.'}</span>
+        </div>
+        <div class="sub-row" id="edOverlayColorRow" style="display:${isRibbon ? 'flex' : 'none'}">
+          <input type="color" class="color-swatch" id="edOverlayColor" value="${item.overlay_bg_color || '#E8402C'}">
+          <span class="hint">Ribbon color</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="cat-pane ${catSubtab === 'hero' ? 'active' : ''}" data-pane="hero">
+      <div class="pane-section">
+        <div class="pane-section-h">Hero</div>
+        <div class="pane-section-d">How this specimen looks in the homepage hero list. With a photo, the hero switches to light mode and the dark left gradient is removed when this variant is selected.</div>
+        <div class="hero-color-grid">
+          <label class="hero-color-row">
+            <input type="checkbox" class="hero-color-custom" data-which="inactive" ${item.hero_text_color ? 'checked' : ''}>
+            <span>Text — before click</span>
+            <input type="color" class="color-swatch hero-color-input" data-which="inactive" value="${item.hero_text_color || '#F3F0E8'}" ${item.hero_text_color ? '' : 'disabled'}>
+          </label>
+          <label class="hero-color-row">
+            <input type="checkbox" class="hero-color-custom" data-which="active" ${item.hero_text_color_active ? 'checked' : ''}>
+            <span>Text — after click</span>
+            <input type="color" class="color-swatch hero-color-input" data-which="active" value="${item.hero_text_color_active || '#E8402C'}" ${item.hero_text_color_active ? '' : 'disabled'}>
+          </label>
+        </div>
+        <div class="photo-row">
+          <div class="hero-bg-preview" id="edHeroPreview">${item.hero_bg_photo_url ? `<img src="${esc(item.hero_bg_photo_url)}" alt="">` : '<span>No photo — particle animation</span>'}</div>
+          <div class="photo-controls">
+            <input type="file" accept="image/*" id="edHeroInput">
+            <button type="button" class="link-danger" id="edHeroRemove" ${item.hero_bg_photo_url ? '' : 'disabled'}>Remove hero photo</button>
+          </div>
+        </div>
+      </div>
+      <div class="pane-section">
+        <div class="pane-section-h">Share card</div>
+        <div class="pane-section-d">Text on the Instagram Story image people get after the quiz.</div>
+        <div class="cat-grid2">
+          <div class="full"><span class="field-label">Tagline</span><input type="text" data-f="share_tagline" value="${esc(item.share_tagline)}" placeholder="For the one who..."></div>
+          <div class="full"><span class="field-label">Mood</span><input type="text" data-f="share_mood" value="${esc(item.share_mood)}" placeholder="Bold · Warm Wood · Unresolved"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cat-ed-foot">
+      <button type="button" class="link-danger" id="catDeleteBtn">Delete specimen</button>
+      <div class="right">
+        <span class="status" id="catStatus"></span>
+        <button type="button" class="btn-ghost" id="catDiscardBtn" disabled>Discard</button>
+        <button type="button" class="btn-primary" id="catSaveBtn">Save changes</button>
+      </div>
     </div>
   `;
 
-  const photoImg = card.querySelector('.cat-photo');
-  const fileInput = card.querySelector('.photo-input');
-  fileInput.addEventListener('change', () => {
-    const file = fileInput.files[0];
-    if (file) photoImg.src = URL.createObjectURL(file);
+  setDirty(false);
+  ed.dataset.heroRemove = '';
+
+  ed.querySelectorAll('.cat-subtab').forEach(btn => btn.addEventListener('click', () => {
+    catSubtab = btn.dataset.sub;
+    ed.querySelectorAll('.cat-subtab').forEach(b => b.classList.toggle('active', b === btn));
+    ed.querySelectorAll('.cat-pane').forEach(p => p.classList.toggle('active', p.dataset.pane === catSubtab));
+  }));
+
+  ed.querySelectorAll('.chip[data-stock]').forEach(chip => chip.addEventListener('click', () => {
+    ed.querySelector('[data-f="stock"]').value = chip.dataset.stock;
+    if (chip.dataset.stock === 'Coming Soon') ed.querySelector('[data-f="coming_soon"]').checked = true;
+    else ed.querySelector('[data-f="coming_soon"]').checked = false;
+    setDirty(true);
+  }));
+
+  const photo = document.getElementById('edPhoto');
+  const px = document.getElementById('edPosX'), py = document.getElementById('edPosY');
+  const syncPos = () => {
+    document.getElementById('edPosXVal').textContent = px.value + '%';
+    document.getElementById('edPosYVal').textContent = py.value + '%';
+    photo.style.objectPosition = `${px.value}% ${py.value}%`;
+  };
+  px.addEventListener('input', syncPos); py.addEventListener('input', syncPos);
+  document.getElementById('edPhotoInput').addEventListener('change', e => {
+    const f = e.target.files[0];
+    if (f){ photo.src = URL.createObjectURL(f); photo.style.opacity = 1; }
   });
 
-  const posXSlider = card.querySelector('.pos-x-slider');
-  const posYSlider = card.querySelector('.pos-y-slider');
-  posXSlider.addEventListener('input', () => {
-    card.querySelector('.posx-val').textContent = posXSlider.value + '%';
-    photoImg.style.objectPosition = `${posXSlider.value}% ${posYSlider.value}%`;
-  });
-  posYSlider.addEventListener('input', () => {
-    card.querySelector('.posy-val').textContent = posYSlider.value + '%';
-    photoImg.style.objectPosition = `${posXSlider.value}% ${posYSlider.value}%`;
-  });
+  ed.querySelectorAll('input[name="edOverlayType"]').forEach(r => r.addEventListener('change', () => {
+    const rib = ed.querySelector('input[name="edOverlayType"]:checked').value === 'ribbon';
+    document.getElementById('edOverlayPhotoRow').style.display = rib ? 'none' : 'flex';
+    document.getElementById('edOverlayColorRow').style.display = rib ? 'flex' : 'none';
+  }));
 
-  card.querySelectorAll('.overlay-type-radio').forEach(radio => {
-    radio.addEventListener('change', () => {
-      const isRibbon = card.querySelector('.overlay-type-radio:checked').value === 'ribbon';
-      card.querySelector('.overlay-photo-row').style.display = isRibbon ? 'none' : 'flex';
-      card.querySelector('.overlay-color-row').style.display = isRibbon ? 'flex' : 'none';
-    });
-  });
+  ed.querySelectorAll('.hero-color-custom').forEach(cb => cb.addEventListener('change', () => {
+    ed.querySelector(`.hero-color-input[data-which="${cb.dataset.which}"]`).disabled = !cb.checked;
+  }));
 
-  card.querySelectorAll('.hero-color-custom').forEach(cb => {
-    cb.addEventListener('change', () => {
-      card.querySelector(`.hero-color-input[data-which="${cb.dataset.which}"]`).disabled = !cb.checked;
-    });
-  });
-  const heroPreview = card.querySelector('.hero-bg-preview');
-  const heroRemoveBtn = card.querySelector('.hero-bg-remove');
-  card.querySelector('.hero-bg-input').addEventListener('change', (e) => {
+  const heroPreview = document.getElementById('edHeroPreview');
+  const heroRemove = document.getElementById('edHeroRemove');
+  document.getElementById('edHeroInput').addEventListener('change', e => {
     const f = e.target.files[0];
     if (!f) return;
     heroPreview.innerHTML = `<img src="${URL.createObjectURL(f)}" alt="">`;
-    card.dataset.heroBgRemove = '';
-    heroRemoveBtn.disabled = false;
+    ed.dataset.heroRemove = '';
+    heroRemove.disabled = false;
   });
-  heroRemoveBtn.addEventListener('click', () => {
-    card.querySelector('.hero-bg-input').value = '';
+  heroRemove.addEventListener('click', () => {
+    document.getElementById('edHeroInput').value = '';
     heroPreview.innerHTML = '<span>No photo — particle animation</span>';
-    card.dataset.heroBgRemove = '1';
-    heroRemoveBtn.disabled = true;
+    ed.dataset.heroRemove = '1';
+    heroRemove.disabled = true;
+    setDirty(true);
   });
 
-  card.querySelector('.save-btn').addEventListener('click', () => saveCatalogItem(item.n, card));
-  card.querySelector('.stock-toggle').addEventListener('click', () => quickToggleStock(item.n, card));
-  card.querySelector('.delete-btn').addEventListener('click', () => deleteCatalogItem(item.n, item.name, card));
-  return card;
+  document.getElementById('catSaveBtn').addEventListener('click', () => saveCatalogItem(item.n));
+  document.getElementById('catDiscardBtn').addEventListener('click', () => {
+    if (confirm('Buang semua perubahan pada specimen ini?')) renderEditor(item);
+  });
+  document.getElementById('catDeleteBtn').addEventListener('click', () => deleteCatalogItem(item.n, item.name));
 }
 
-async function deleteCatalogItem(n, name, card){
-  if (!confirm(`Hapus "${name || n}" dari katalog? Ini juga akan menghilangkannya dari website. Tindakan ini tidak bisa dibatalkan.`)) return;
+/* Resizes + re-encodes photos before upload (WebP, ~80% quality) so the site
+   doesn't serve 3–8 MB originals. Falls back to the original file whenever
+   compression isn't possible or wouldn't make it smaller. */
+async function compressImage(file, maxDim){
+  if (!/^image\/(jpeg|png|webp)$/.test(file.type)) return file;
+  try{
+    const bmp = await createImageBitmap(file);
+    const scale = Math.min(1, maxDim / Math.max(bmp.width, bmp.height));
+    const w = Math.round(bmp.width * scale), h = Math.round(bmp.height * scale);
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(bmp, 0, 0, w, h);
+    const toBlob = (type, q) => new Promise(res => canvas.toBlob(res, type, q));
+    let blob = await toBlob('image/webp', 0.82);
+    let ext = 'webp';
+    if (!blob || blob.type !== 'image/webp'){
+      if (file.type === 'image/png') return file;          // JPEG would drop transparency
+      blob = await toBlob('image/jpeg', 0.85); ext = 'jpg';
+    }
+    if (!blob || blob.size >= file.size) return file;
+    return new File([blob], file.name.replace(/\.[^.]+$/, '') + '.' + ext, { type: blob.type });
+  } catch(e){ return file; }
+}
+
+async function uploadCatalogFile(file, prefix){
+  const status = document.getElementById('catStatus');
+  if (status) status.textContent = 'Optimizing photo…';
+  file = await compressImage(file, /-hero$/.test(prefix) ? 2200 : 1600);
+  if (status) status.textContent = 'Uploading…';
+  const ext = file.name.split('.').pop();
+  const path = `${prefix}-${Date.now()}.${ext}`;
+  const { error } = await sb.storage.from('catalog-photos').upload(path, file, { upsert: true, contentType: file.type, cacheControl: '31536000' });
+  if (error) throw new Error(error.message);
+  return sb.storage.from('catalog-photos').getPublicUrl(path).data.publicUrl;
+}
+
+async function saveCatalogItem(n){
+  const ed = document.getElementById('catEditor');
+  const status = document.getElementById('catStatus');
+  const saveBtn = document.getElementById('catSaveBtn');
+  status.className = 'status'; status.textContent = 'Saving…';
+  saveBtn.disabled = true;
+
+  const updates = {};
+  ed.querySelectorAll('[data-f]').forEach(el => { updates[el.dataset.f] = el.type === 'checkbox' ? el.checked : el.value; });
+  updates.photo_position = `${document.getElementById('edPosX').value}% ${document.getElementById('edPosY').value}%`;
+  updates.overlay_bg_type = ed.querySelector('input[name="edOverlayType"]:checked').value;
+  updates.overlay_bg_color = document.getElementById('edOverlayColor').value;
+  ed.querySelectorAll('.hero-color-custom').forEach(cb => {
+    const input = ed.querySelector(`.hero-color-input[data-which="${cb.dataset.which}"]`);
+    updates[cb.dataset.which === 'active' ? 'hero_text_color_active' : 'hero_text_color'] = cb.checked ? input.value : null;
+  });
+
+  try{
+    const photoFile = document.getElementById('edPhotoInput').files[0];
+    if (photoFile) updates.photo_url = await uploadCatalogFile(photoFile, n);
+    const overlayFile = document.getElementById('edOverlayInput').files[0];
+    if (overlayFile) updates.overlay_photo_url = await uploadCatalogFile(overlayFile, `${n}-overlay`);
+    const heroFile = document.getElementById('edHeroInput').files[0];
+    if (heroFile) updates.hero_bg_photo_url = await uploadCatalogFile(heroFile, `${n}-hero`);
+    else if (ed.dataset.heroRemove === '1') updates.hero_bg_photo_url = null;
+  } catch(err){
+    status.className = 'status err'; status.textContent = 'Upload gagal: ' + err.message;
+    saveBtn.disabled = false;
+    return;
+  }
+
+  const { data, error } = await sb.from('catalog_items').update(updates).eq('n', n).select();
+  saveBtn.disabled = false;
+  if (error){ status.className = 'status err'; status.textContent = 'Gagal: ' + error.message; return; }
+
+  const idx = catalogItems.findIndex(x => x.n === n);
+  if (idx !== -1 && data && data[0]) catalogItems[idx] = data[0];
+  renderCatList();
+  renderEditor(catalogItems[idx]);
+  const st = document.getElementById('catStatus');
+  st.className = 'status ok'; st.textContent = 'Tersimpan ✓';
+  setTimeout(() => { if (st.isConnected){ st.textContent = ''; st.className = 'status'; } }, 2500);
+}
+
+async function deleteCatalogItem(n, name){
+  if (!confirm(`Hapus "${name || n}" dari katalog? Ini juga menghilangkannya dari website dan tidak bisa dibatalkan.`)) return;
   const { error } = await sb.from('catalog_items').delete().eq('n', n);
   if (error){ alert('Gagal hapus: ' + error.message); return; }
-  card.remove();
+  catalogItems = catalogItems.filter(x => x.n !== n);
+  selectedN = null;
+  setDirty(false);
+  renderCatList();
+  if (catalogItems.length) selectSpecimen(catalogItems[0].n, true);
+  else document.getElementById('catEditor').innerHTML = '<div class="cat-empty">Belum ada specimen. Klik "+ New" untuk menambah.</div>';
 }
 
-document.getElementById('addSpecimenBtn').addEventListener('click', async () => {
-  const n = prompt('Kode unik specimen (huruf/angka, contoh: G untuk "Geosmin"):');
-  if (!n) return;
-  const series = confirm('Klik OK untuk "degree" series, Cancel untuk "fraction" series.') ? 'degree' : 'fraction';
+async function addSpecimen(){
+  if (!confirmDiscard()) return;
+  const raw = prompt('Kode unik specimen (huruf/angka, contoh: G):');
+  if (!raw) return;
+  const n = raw.trim().toUpperCase();
+  if (catalogItems.some(x => x.n === n)){ alert(`Kode "${n}" sudah dipakai.`); return; }
+  const series = confirm('OK = Degree series, Cancel = Fraction series') ? 'degree' : 'fraction';
   const { data, error } = await sb.from('catalog_items').insert([{
-    n: n.trim().toUpperCase(), series, name: 'New Specimen', stock: 'Coming Soon',
-    coming_soon: true, sort_order: 999
+    n, series, name: 'New Specimen', stock: 'Coming Soon', coming_soon: true,
+    sort_order: catalogItems.length + 1
   }]).select();
   if (error){ alert('Gagal nambah: ' + error.message); return; }
-  document.getElementById('catalogGrid').appendChild(renderCatalogCard(data[0]));
-});
-
-async function quickToggleStock(n, card){
-  const toggle = card.querySelector('.stock-toggle');
-  const stockInput = card.querySelector('[data-f="stock"]');
-  const isSoldOut = toggle.classList.contains('sold-out');
-  const newStock = isSoldOut ? 'Available' : 'Sold Out';
-  const { error } = await sb.from('catalog_items').update({ stock: newStock }).eq('n', n);
-  if (error){ alert('Gagal update stock: ' + error.message); return; }
-  toggle.classList.toggle('sold-out');
-  toggle.querySelector('.stock-label').textContent = `${newStock} (click to toggle)`;
-  stockInput.value = newStock;
+  catalogItems.push(data[0]);
+  catSubtab = 'basics';
+  renderCatList();
+  selectSpecimen(n, true);
 }
 
-async function saveCatalogItem(n, card){
-  const status = card.querySelector('.status');
-  status.className = 'status'; status.textContent = 'Saving…';
-  const updates = {};
-  card.querySelectorAll('[data-f]').forEach(el => { updates[el.dataset.f] = el.type === 'checkbox' ? el.checked : el.value; });
-
-  const posX = card.querySelector('.pos-x-slider').value;
-  const posY = card.querySelector('.pos-y-slider').value;
-  updates.photo_position = `${posX}% ${posY}%`;
-
-  updates.overlay_bg_type = card.querySelector('.overlay-type-radio:checked').value;
-  updates.overlay_bg_color = card.querySelector('.overlay-color-input').value;
-
-  card.querySelectorAll('.hero-color-custom').forEach(cb => {
-    const input = card.querySelector(`.hero-color-input[data-which="${cb.dataset.which}"]`);
-    const col = cb.dataset.which === 'active' ? 'hero_text_color_active' : 'hero_text_color';
-    updates[col] = cb.checked ? input.value : null;
-  });
-
-  const heroFile = card.querySelector('.hero-bg-input').files[0];
-  if (heroFile){
-    const ext = heroFile.name.split('.').pop();
-    const path = `${n}-hero-${Date.now()}.${ext}`;
-    const { error: heroUpErr } = await sb.storage.from('catalog-photos').upload(path, heroFile, { upsert: true });
-    if (heroUpErr){ status.className = 'status err'; status.textContent = 'Upload hero gagal: ' + heroUpErr.message; return; }
-    const { data: heroPub } = sb.storage.from('catalog-photos').getPublicUrl(path);
-    updates.hero_bg_photo_url = heroPub.publicUrl;
-  } else if (card.dataset.heroBgRemove === '1'){
-    updates.hero_bg_photo_url = null;
-  }
-
-  const overlayFile = card.querySelector('.overlay-photo-input').files[0];
-  if (overlayFile){
-    const ext = overlayFile.name.split('.').pop();
-    const path = `${n}-overlay-${Date.now()}.${ext}`;
-    const { error: ovUploadError } = await sb.storage.from('catalog-photos').upload(path, overlayFile, { upsert: true });
-    if (ovUploadError){ status.className = 'status err'; status.textContent = 'Upload overlay gagal: ' + ovUploadError.message; return; }
-    const { data: ovPub } = sb.storage.from('catalog-photos').getPublicUrl(path);
-    updates.overlay_photo_url = ovPub.publicUrl;
-  }
-
-  const file = card.querySelector('.photo-input').files[0];
-  if (file){
-    const ext = file.name.split('.').pop();
-    const path = `${n}-${Date.now()}.${ext}`;
-    const { error: uploadError } = await sb.storage.from('catalog-photos').upload(path, file, { upsert: true });
-    if (uploadError){ status.className = 'status err'; status.textContent = 'Upload gagal: ' + uploadError.message; return; }
-    const { data: pub } = sb.storage.from('catalog-photos').getPublicUrl(path);
-    updates.photo_url = pub.publicUrl;
-    card.querySelector('.cat-photo').src = pub.publicUrl;
-  }
-  const { error } = await sb.from('catalog_items').update(updates).eq('n', n);
-  if (error){ status.className = 'status err'; status.textContent = 'Gagal: ' + error.message; }
-  else {
-    status.className = 'status ok'; status.textContent = 'Tersimpan ✓';
-    setTimeout(() => { status.textContent = ''; status.className = 'status'; }, 2500);
-  }
-}
+// any edit inside the editor marks it dirty (attached once; the editor's contents are re-rendered)
+document.getElementById('catEditor').addEventListener('input', () => setDirty(true));
+document.getElementById('catEditor').addEventListener('change', () => setDirty(true));
+document.getElementById('addSpecimenBtn').addEventListener('click', addSpecimen);
+document.getElementById('addSpecimenBtnMobile').addEventListener('click', addSpecimen);
+document.getElementById('catMobileSelect').addEventListener('change', e => selectSpecimen(e.target.value));
+window.addEventListener('beforeunload', e => { if (catDirty){ e.preventDefault(); e.returnValue = ''; } });
 
 /* ---------- QUIZ LEADS ---------- */
 let leadsCache = [];
@@ -884,7 +1043,7 @@ async function loadReferralCodes(){
   const body = document.getElementById('referralBody');
   const { data, error } = await sb.from('referral_codes').select('*').order('created_at', { ascending: false });
   loading.style.display = 'none';
-  if (error){ body.innerHTML = `<tr><td colspan="6" class="empty-note">Gagal load: ${error.message}</td></tr>`; return; }
+  if (error){ body.innerHTML = `<tr><td colspan="6" class="empty-note">Gagal load: ${esc(error.message)}</td></tr>`; return; }
   renderReferralTable(data);
 }
 function renderReferralTable(data){
@@ -894,7 +1053,7 @@ function renderReferralTable(data){
       <td><b>${esc(r.code)}</b></td>
       <td>${esc(r.owner_name)}</td>
       <td>${esc(r.discount_note)}</td>
-      <td><span class="status-pill ${r.status === 'disabled' ? 'disabled' : ''}">${r.status}</span></td>
+      <td><span class="status-pill ${r.status === 'disabled' ? 'disabled' : ''}">${esc(r.status)}</span></td>
       <td>${r.times_used} <button data-act="increment" data-code="${esc(r.code)}">+1</button></td>
       <td>
         <button data-act="toggle" data-code="${esc(r.code)}">${r.status === 'active' ? 'Disable' : 'Enable'}</button>
@@ -939,7 +1098,7 @@ async function loadClicks(){
   const list = document.getElementById('clicksList');
   const { data, error } = await sb.from('product_clicks').select('*');
   loading.style.display = 'none';
-  if (error){ list.innerHTML = `<div class="empty-note">Gagal load: ${error.message}</div>`; return; }
+  if (error){ list.innerHTML = `<div class="empty-note">Gagal load: ${esc(error.message)}</div>`; return; }
   if (!data.length){ list.innerHTML = '<div class="empty-note">Belum ada klik tercatat.</div>'; return; }
   const withTotal = data.map(d => ({ ...d, total: (d.view_count||0)+(d.add_to_bag_count||0)+(d.request_access_count||0) }));
   withTotal.sort((a,b) => b.total - a.total);
@@ -966,7 +1125,7 @@ async function loadQuizQuestions(){
 
   const { data, error } = await sb.from('quiz_questions').select('*, quiz_options(*)').order('sort_order');
   loading.style.display = 'none';
-  if (error){ list.innerHTML = `<div class="empty-note">Gagal load: ${error.message}</div>`; return; }
+  if (error){ list.innerHTML = `<div class="empty-note">Gagal load: ${esc(error.message)}</div>`; return; }
   list.innerHTML = '';
   if (!data.length){ list.innerHTML = '<div class="empty-note">Belum ada soal. Klik "+ Add Question" untuk mulai.</div>'; return; }
   data.forEach(q => {
