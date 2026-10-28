@@ -177,10 +177,12 @@
     transition:opacity .5s var(--ease), font-weight .5s var(--ease), letter-spacing .5s var(--ease), color .5s var(--ease);
     opacity:0; animation:riseIn .7s var(--ease) forwards;
   }
-  .hero-list .item.active .t{opacity:.3; font-weight:300;}
+  /* Hover and selected share ONE highlight color: the admin's custom
+     "hover & selected" color if set, otherwise the variant's accent. */
+  .hero-list .item{--item-highlight:var(--item-color-active, var(--item-accent, var(--oxide)));}
+  .hero-list .item.active .t{color:var(--item-highlight); opacity:1; font-weight:300;}
   /* per-variant custom active color (set from admin) — shown at full opacity so the chosen color actually reads */
-  .hero-list .item.active.has-active-color .t{color:var(--item-color-active); opacity:1;}
-  .hero-list .item:not(.active):hover .t{letter-spacing:0.006em; color:var(--item-accent, var(--oxide));}
+  .hero-list .item:not(.active):hover .t{letter-spacing:0.006em; color:var(--item-highlight);}
   .hero-list .item .tag{
     font-size:12px; color:var(--muted);
     font-variant-numeric:tabular-nums;
@@ -222,7 +224,8 @@
   body[data-hero-bg="light"] .hero-nav .links{ color:#1C1B18; }
   body[data-hero-bg="light"] .hero-nav .word img{ filter:none; }
   body[data-hero-bg="light"] .hero-list .item .t{ color:var(--item-color, #1C1B18); }
-  body[data-hero-bg="light"] .hero-list .item.active.has-active-color .t{ color:var(--item-color-active); }
+  body[data-hero-bg="light"] .hero-list .item.active .t,
+  body[data-hero-bg="light"] .hero-list .item:not(.active):hover .t{ color:var(--item-highlight); }
   body[data-hero-bg="light"] .hero-info button{ color:#1C1B18; border-bottom-color:rgba(28,27,24,.5); }
   body[data-hero-bg="light"] .scroll-cue{ color:rgba(28,27,24,.55); }
   .scroll-cue .arrow{

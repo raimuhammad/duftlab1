@@ -195,6 +195,108 @@
     .cat-subtabs{padding:0 6px;}
   }
 
+  /* ---------- QUIZ EDITOR ---------- */
+  .quiz-q-card{background:var(--card); border:1px solid var(--line); padding:20px; margin-bottom:16px;}
+  .quiz-q-head{display:flex; gap:10px; align-items:flex-start; margin-bottom:16px;}
+  .quiz-q-head textarea{
+    flex:1; background:var(--bg); border:1px solid var(--line); outline:none; color:var(--ink);
+    font-family:var(--sans); font-size:14px; padding:10px; resize:vertical; min-height:44px;
+  }
+  .quiz-q-head textarea:focus{border-color:var(--ink);}
+  .quiz-opt-row{display:flex; gap:8px; align-items:center; margin-bottom:8px;}
+  .quiz-opt-row input[type=text]{
+    flex:1; background:var(--bg); border:1px solid var(--line); outline:none; color:var(--ink);
+    font-family:var(--sans); font-size:13px; padding:8px 10px;
+  }
+  .quiz-opt-row select{
+    background:var(--bg); border:1px solid var(--line); outline:none; color:var(--ink);
+    font-family:var(--mono); font-size:11px; padding:8px 6px; text-transform:uppercase;
+  }
+  .quiz-opt-row input:focus, .quiz-opt-row select:focus{border-color:var(--ink);}
+  .quiz-opt-row button{
+    background:none; border:1px solid var(--line); color:var(--oxide); padding:6px 10px;
+    font-family:var(--mono); font-size:10px; cursor:pointer;
+  }
+  .quiz-opt-row button:hover{border-color:var(--oxide);}
+  .quiz-q-actions{display:flex; gap:10px; align-items:center; margin-top:14px; padding-top:14px; border-top:1px solid var(--line); flex-wrap:wrap;}
+  .quiz-q-actions button{
+    background:none; border:1px solid var(--line); color:var(--ink); padding:8px 14px;
+    font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.04em; cursor:pointer;
+  }
+  .quiz-q-actions button:hover{border-color:var(--ink);}
+  .quiz-q-actions .save-q-btn{background:var(--ink); color:var(--bg); border:none;}
+  .quiz-q-actions .save-q-btn:hover{background:var(--oxide); color:#fff;}
+  .quiz-q-actions .delete-q-btn{color:var(--oxide);}
+  .quiz-q-actions .delete-q-btn:hover{border-color:var(--oxide); background:rgba(232,64,44,.1);}
+  .quiz-q-actions .status{font-family:var(--mono); font-size:11px; color:var(--muted);}
+  .quiz-q-actions .status.ok{color:var(--ok);}
+  .quiz-q-actions .status.err{color:var(--oxide);}
+
+  /* ---------- FEED PLANNER ---------- */
+  .feed-layout{display:grid; grid-template-columns:minmax(0,420px) 1fr; gap:28px; align-items:start;}
+  .feed-phone{border:1px solid var(--line); background:#000; position:sticky; top:16px;}
+  .feed-viewtabs{display:flex; border-bottom:1px solid var(--line);}
+  .feed-viewtab{flex:1; background:none; border:none; color:var(--muted); padding:11px 0; font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.05em; cursor:pointer; border-bottom:2px solid transparent;}
+  .feed-viewtab.active{color:var(--ink); border-bottom-color:var(--ink);}
+  .ig-profile{display:flex; align-items:center; gap:16px; padding:16px 14px 12px;}
+  .ig-avatar{width:64px; height:64px; border-radius:50%; background:#F6F3EC; display:flex; align-items:center; justify-content:center; flex-shrink:0; overflow:hidden;}
+  .ig-avatar img{width:78%;}
+  .ig-handle{font-family:var(--sans); font-weight:600; font-size:14px;}
+  .ig-stats{display:flex; gap:16px; font-size:12px; color:var(--muted); margin-top:4px;}
+  .ig-stats b{color:var(--ink); font-weight:600;}
+  .ig-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:2px;}
+  .ig-tile{position:relative; aspect-ratio:3/4; background:#1a1a17; overflow:hidden; cursor:pointer; outline:2px solid transparent; outline-offset:-2px;}
+  .ig-tile img{width:100%; height:100%; object-fit:cover; display:block; pointer-events:none;}
+  .ig-tile.selected{outline-color:var(--oxide);}
+  .ig-tile .ig-icon{position:absolute; top:6px; right:6px; width:16px; height:16px; z-index:2; filter:drop-shadow(0 1px 2px rgba(0,0,0,.6));}
+  .ig-tile .ig-badge{position:absolute; left:6px; bottom:6px; z-index:2; font-family:var(--mono); font-size:9px; text-transform:uppercase; background:rgba(0,0,0,.6); color:#fff; padding:2px 5px;}
+  .ig-tile.dragging{opacity:.35;}
+  .ig-tile.drop-target{outline-color:var(--ink);}
+  .ig-empty{grid-column:1/-1; padding:48px 16px; text-align:center; font-family:var(--mono); font-size:11px; color:var(--muted);}
+  .ig-post{padding-bottom:12px;}
+  .ig-post-head{display:flex; align-items:center; gap:10px; padding:10px 12px;}
+  .ig-post-head .ig-avatar{width:30px; height:30px;}
+  .ig-post-media{aspect-ratio:4/5; background:#1a1a17; overflow:hidden;}
+  .ig-post-media img{width:100%; height:100%; object-fit:cover; display:block;}
+  .ig-post-actions{display:flex; gap:14px; padding:10px 12px 6px;}
+  .ig-post-actions svg{width:22px; height:22px;}
+  .ig-post-cap{padding:0 12px; font-size:13px; line-height:1.45; white-space:pre-wrap; word-break:break-word;}
+  .ig-post-cap b{font-weight:600;}
+  .ig-post-cap .more{color:var(--muted); cursor:pointer;}
+  .ig-post-date{padding:6px 12px 0; font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em;}
+
+  .feed-editor{border:1px solid var(--line);}
+  .feed-ed-body{padding:20px; display:flex; flex-direction:column; gap:16px;}
+  .feed-cover-row{display:flex; gap:18px; align-items:flex-start;}
+  .feed-cover{width:150px; aspect-ratio:3/4; background:#1a1a17; border:1px solid var(--line); overflow:hidden; flex-shrink:0;}
+  .feed-cover img{width:100%; height:100%; object-fit:cover;}
+  .feed-cover-ctrl{flex:1; min-width:0; display:flex; flex-direction:column; gap:10px;}
+  .feed-cover-ctrl input[type=file]{font-size:11px; font-family:var(--mono); color:var(--muted);}
+  .feed-video{width:100%; max-height:260px; background:#000; display:block;}
+  .feed-frame-row{display:flex; gap:10px; align-items:center;}
+  .feed-frame-row input[type=range]{flex:1; accent-color:var(--oxide);}
+  .feed-frame-row span{font-family:var(--mono); font-size:10px; color:var(--muted); min-width:44px; text-align:right;}
+  .feed-hint{font-family:var(--mono); font-size:10px; color:var(--muted); line-height:1.5;}
+  .feed-row2{display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;}
+  .feed-editor select, .feed-editor input[type=date], .feed-editor textarea{
+    width:100%; background:var(--card); border:1px solid var(--line); outline:none; color:var(--ink);
+    font-family:var(--sans); font-size:13px; padding:9px 10px; color-scheme:dark;
+  }
+  .feed-editor textarea{min-height:180px; resize:vertical; line-height:1.5;}
+  .feed-editor select:focus, .feed-editor input:focus, .feed-editor textarea:focus{border-color:var(--ink);}
+  .feed-capcount{font-family:var(--mono); font-size:10px; color:var(--muted); text-align:right; margin-top:4px;}
+  .feed-capcount.over{color:var(--oxide);}
+  .feed-move{display:none; gap:8px;}
+  .upload-progress{font-family:var(--mono); font-size:11px; color:var(--muted);}
+
+  @media(max-width:900px){
+    .feed-layout{grid-template-columns:1fr;}
+    .feed-phone{position:static;}
+    .feed-row2{grid-template-columns:1fr;}
+    .feed-cover-row{flex-direction:column;}
+    .feed-move{display:flex;}
+  }
+
   /* ---------- LEADS (merged: quiz / newsletter / access) ---------- */
   .subtabs{display:flex; gap:8px; margin-bottom:24px;}
   .subtab-btn{
@@ -284,6 +386,7 @@
     <button class="tab-btn" data-tab="clicks">Click Stats</button>
     <button class="tab-btn" data-tab="referral">Referral Codes</button>
     <button class="tab-btn" data-tab="quiz">Quiz</button>
+    <button class="tab-btn" data-tab="feed">Feed</button>
   </div>
 
   <main>
@@ -376,6 +479,25 @@
       <div id="quizList"></div>
     </div>
 
+    <!-- FEED PLANNER -->
+    <div class="panel" id="panel-feed">
+      <div class="toolbar">
+        <div class="upload-progress" id="feedUploadProgress"></div>
+        <label class="btn-primary" style="cursor:pointer;">+ Add posts<input type="file" id="feedUploadInput" accept="image/*,video/*" multiple hidden></label>
+      </div>
+      <div class="loading-note" id="feedLoading">Loading…</div>
+      <div class="feed-layout">
+        <div class="feed-phone">
+          <div class="feed-viewtabs">
+            <button type="button" class="feed-viewtab active" data-view="grid">Grid</button>
+            <button type="button" class="feed-viewtab" data-view="post">Post</button>
+          </div>
+          <div id="feedPreviewBody"></div>
+        </div>
+        <div class="feed-editor cat-editor" id="feedEditor"></div>
+      </div>
+    </div>
+
     <!-- REFERRAL CODES -->
     <div class="panel" id="panel-referral">
       <div class="ref-form">
@@ -434,6 +556,7 @@ function showAdmin(){
   loadReferralCodes();
   loadClicks();
   loadQuizQuestions();
+  loadFeed();
 }
 
 
@@ -444,6 +567,10 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 });
 function activateTab(tab){
   const current = (document.querySelector('.tab-btn.active') || {}).dataset?.tab;
+  if (current === 'feed' && tab !== 'feed' && feedDirty){
+    if (!confirm('Ada perubahan post yang belum disimpan. Buang perubahan ini?')) return;
+    renderFeedEditor();
+  }
   if (current === 'catalog' && tab !== 'catalog' && catDirty){
     if (!confirm('Ada perubahan katalog yang belum disimpan. Buang perubahan ini?')) return;
     const item = catalogItems.find(x => x.n === selectedN);
@@ -749,7 +876,7 @@ function renderEditor(item){
     <div class="cat-pane ${catSubtab === 'hero' ? 'active' : ''}" data-pane="hero">
       <div class="pane-section">
         <div class="pane-section-h">Hero</div>
-        <div class="pane-section-d">How this specimen looks in the homepage hero list. With a photo, the hero switches to light mode and the dark left gradient is removed when this variant is selected.</div>
+        <div class="pane-section-d">How this specimen looks in the homepage hero list. Hover and selected (clicked) use the same color; if unset, the variant's accent color is used. With a photo, the hero switches to light mode and the dark left gradient is removed when this variant is selected.</div>
         <div class="hero-color-grid">
           <label class="hero-color-row">
             <input type="checkbox" class="hero-color-custom" data-which="inactive" ${item.hero_text_color ? 'checked' : ''}>
@@ -758,7 +885,7 @@ function renderEditor(item){
           </label>
           <label class="hero-color-row">
             <input type="checkbox" class="hero-color-custom" data-which="active" ${item.hero_text_color_active ? 'checked' : ''}>
-            <span>Text — after click</span>
+            <span>Text — hover &amp; selected</span>
             <input type="color" class="color-swatch hero-color-input" data-which="active" value="${item.hero_text_color_active || '#E8402C'}" ${item.hero_text_color_active ? '' : 'disabled'}>
           </label>
         </div>
@@ -1113,6 +1240,429 @@ async function loadClicks(){
 }
 
 checkSession();
+
+/* ---------- FEED PLANNER ----------
+   Instagram grid preview. Only cover images are stored; videos stay in this
+   browser tab (object URLs) just long enough to pick a cover frame. */
+let feedPosts = [];
+let feedSelectedId = null;
+let feedDirty = false;
+let feedView = 'grid';
+let feedPendingCover = null;          // Blob/File waiting to be uploaded on Save
+const feedVideos = new Map();         // post id -> object URL of the source video (this session only)
+const IG_CAPTION_LIMIT = 2200;
+const IG_ICONS = {
+  carousel: '<svg class="ig-icon" viewBox="0 0 24 24" fill="#fff"><path d="M8 3h11a2 2 0 0 1 2 2v11h-2V5H8z"/><rect x="3" y="7" width="13" height="14" rx="2"/></svg>',
+  reel: '<svg class="ig-icon" viewBox="0 0 24 24" fill="#fff"><path d="M7 4.5v15l13-7.5z"/></svg>'
+};
+
+function feedFmtDate(d){
+  if (!d) return '';
+  return new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { day:'numeric', month:'short' });
+}
+function setFeedDirty(on){
+  feedDirty = on;
+  const f = document.getElementById('feedDirtyFlag'); if (f) f.classList.toggle('on', on);
+  const d = document.getElementById('feedDiscardBtn'); if (d) d.disabled = !on;
+}
+function feedConfirmDiscard(){
+  return !feedDirty || confirm('Ada perubahan post yang belum disimpan. Buang perubahan ini?');
+}
+
+async function loadFeed(){
+  const { data, error } = await sb.from('feed_posts').select('*').order('sort_order').order('created_at', { ascending:false });
+  document.getElementById('feedLoading').style.display = 'none';
+  if (error){
+    document.getElementById('feedEditor').innerHTML = `<div class="cat-empty">Gagal load feed: ${esc(error.message)}<br>Sudah menjalankan supabase-admin-v7-setup.sql?</div>`;
+    return;
+  }
+  feedPosts = data || [];
+  if (!feedPosts.some(p => p.id === feedSelectedId)) feedSelectedId = feedPosts[0] ? feedPosts[0].id : null;
+  renderFeedPreview();
+  renderFeedEditor();
+}
+
+/* ----- left: phone preview ----- */
+function renderFeedPreview(){
+  document.querySelectorAll('.feed-viewtab').forEach(b => b.classList.toggle('active', b.dataset.view === feedView));
+  const body = document.getElementById('feedPreviewBody');
+  if (feedView === 'post'){ renderFeedPostView(body); return; }
+
+  body.innerHTML = `
+    <div class="ig-profile">
+      <div class="ig-avatar"><img src="duftlab-logo.png" alt=""></div>
+      <div>
+        <div class="ig-handle">duftlab</div>
+        <div class="ig-stats"><span><b>${feedPosts.length}</b> posts</span><span><b>${feedPosts.filter(p => p.status !== 'posted').length}</b> planned</span></div>
+      </div>
+    </div>
+    <div class="ig-grid" id="igGrid">
+      ${feedPosts.length ? feedPosts.map(p => `
+        <div class="ig-tile ${p.id === feedSelectedId ? 'selected' : ''}" data-id="${esc(p.id)}" draggable="true" title="${esc((p.caption || '').slice(0, 80))}">
+          ${p.cover_url ? `<img src="${esc(p.cover_url)}" alt="">` : ''}
+          ${IG_ICONS[p.media_type] || ''}
+          ${p.status === 'posted' ? '' : `<span class="ig-badge">${p.planned_at ? esc(feedFmtDate(p.planned_at)) : 'Draft'}</span>`}
+        </div>`).join('') : '<div class="ig-empty">Belum ada post.<br>Klik "+ Add posts" untuk upload foto atau video.</div>'}
+    </div>`;
+
+  const grid = document.getElementById('igGrid');
+  let dragId = null;
+  grid.querySelectorAll('.ig-tile').forEach(tile => {
+    tile.addEventListener('click', () => selectFeedPost(tile.dataset.id));
+    tile.addEventListener('dblclick', () => { selectFeedPost(tile.dataset.id); feedView = 'post'; renderFeedPreview(); });
+    tile.addEventListener('dragstart', e => { dragId = tile.dataset.id; tile.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; });
+    tile.addEventListener('dragend', () => { tile.classList.remove('dragging'); grid.querySelectorAll('.drop-target').forEach(t => t.classList.remove('drop-target')); });
+    tile.addEventListener('dragover', e => { e.preventDefault(); if (tile.dataset.id !== dragId) tile.classList.add('drop-target'); });
+    tile.addEventListener('dragleave', () => tile.classList.remove('drop-target'));
+    tile.addEventListener('drop', e => {
+      e.preventDefault();
+      tile.classList.remove('drop-target');
+      if (!dragId || dragId === tile.dataset.id) return;
+      moveFeedPost(dragId, feedPosts.findIndex(p => p.id === tile.dataset.id));
+    });
+  });
+}
+
+function renderFeedPostView(body){
+  const p = feedPosts.find(x => x.id === feedSelectedId);
+  if (!p){ body.innerHTML = '<div class="ig-empty">Pilih post di grid dulu.</div>'; return; }
+  // reflect unsaved editor values live
+  const capEl = document.getElementById('feedCaption');
+  const caption = capEl ? capEl.value : (p.caption || '');
+  const dateEl = document.getElementById('feedDate');
+  const date = dateEl ? dateEl.value : p.planned_at;
+  const coverEl = document.getElementById('feedCoverImg');
+  const cover = coverEl && coverEl.getAttribute('src') ? coverEl.getAttribute('src') : p.cover_url;
+  const short = caption.length > 125 ? caption.slice(0, 125).replace(/\s+\S*$/, '') : caption;
+  const icon = '<svg viewBox="0 0 24 24" fill="none" stroke="#F3F0E8" stroke-width="1.8">';
+  body.innerHTML = `
+    <div class="ig-post">
+      <div class="ig-post-head"><div class="ig-avatar"><img src="duftlab-logo.png" alt=""></div><div class="ig-handle">duftlab</div></div>
+      <div class="ig-post-media">${cover ? `<img src="${esc(cover)}" alt="">` : ''}</div>
+      <div class="ig-post-actions">
+        ${icon}<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>
+        ${icon}<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>
+        ${icon}<path d="M21 4 10 15M21 4l-7 17-4-6-6-4z"/></svg>
+      </div>
+      <div class="ig-post-cap" id="igCap"></div>
+      <div class="ig-post-date">${date ? esc(feedFmtDate(date)) : 'Draft'}</div>
+    </div>`;
+  const capBox = document.getElementById('igCap');
+  const renderCap = full => {
+    capBox.innerHTML = '<b>duftlab</b> ';
+    capBox.appendChild(document.createTextNode(full ? caption : short));
+    if (!full && caption.length > short.length){
+      const more = document.createElement('span');
+      more.className = 'more'; more.textContent = '… more';
+      more.addEventListener('click', () => renderCap(true));
+      capBox.appendChild(more);
+    }
+  };
+  renderCap(false);
+}
+
+document.querySelectorAll('.feed-viewtab').forEach(btn => btn.addEventListener('click', () => {
+  feedView = btn.dataset.view;
+  renderFeedPreview();
+}));
+
+/* ----- ordering ----- */
+async function moveFeedPost(id, toIndex){
+  const from = feedPosts.findIndex(p => p.id === id);
+  if (from === -1 || toIndex < 0 || toIndex >= feedPosts.length || from === toIndex) return;
+  const [item] = feedPosts.splice(from, 1);
+  feedPosts.splice(toIndex, 0, item);
+  const changed = [];
+  feedPosts.forEach((p, i) => { if (p.sort_order !== i){ p.sort_order = i; changed.push(p); } });
+  renderFeedPreview();
+  const results = await Promise.all(changed.map(p => sb.from('feed_posts').update({ sort_order: p.sort_order }).eq('id', p.id)));
+  const failed = results.find(r => r.error);
+  if (failed) alert('Urutan gagal disimpan: ' + failed.error.message);
+}
+
+/* ----- media helpers ----- */
+function loadVideo(src){
+  return new Promise((resolve, reject) => {
+    const v = document.createElement('video');
+    v.muted = true; v.playsInline = true; v.preload = 'auto'; v.crossOrigin = 'anonymous';
+    v.onloadeddata = () => resolve(v);
+    v.onerror = () => reject(new Error('Video tidak bisa dibaca browser ini'));
+    v.src = src;
+  });
+}
+function seekVideo(v, t){
+  return new Promise(resolve => {
+    if (Math.abs(v.currentTime - t) < 0.01){ resolve(); return; }
+    v.onseeked = () => { v.onseeked = null; resolve(); };
+    v.currentTime = t;
+  });
+}
+/* draws the video's current frame to an image Blob, longest side <= 1440px */
+async function frameToBlob(v){
+  const scale = Math.min(1, 1440 / Math.max(v.videoWidth, v.videoHeight));
+  const c = document.createElement('canvas');
+  c.width = Math.round(v.videoWidth * scale); c.height = Math.round(v.videoHeight * scale);
+  c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+  const toBlob = (type, q) => new Promise(r => c.toBlob(r, type, q));
+  let blob = await toBlob('image/webp', 0.85);
+  if (!blob || blob.type !== 'image/webp') blob = await toBlob('image/jpeg', 0.88);
+  return blob;
+}
+async function uploadFeedCover(blob){
+  const ext = blob.type === 'image/webp' ? 'webp' : blob.type === 'image/png' ? 'png' : 'jpg';
+  const path = `feed/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${ext}`;
+  const { error } = await sb.storage.from('catalog-photos').upload(path, blob, { contentType: blob.type, cacheControl: '31536000' });
+  if (error) throw new Error(error.message);
+  return sb.storage.from('catalog-photos').getPublicUrl(path).data.publicUrl;
+}
+function feedStoragePath(url){
+  const m = (url || '').match(/\/catalog-photos\/(feed\/[^?]+)/);
+  return m ? m[1] : null;
+}
+
+/* ----- add posts ----- */
+document.getElementById('feedUploadInput').addEventListener('change', async e => {
+  const files = [...e.target.files];
+  e.target.value = '';
+  if (!files.length || !feedConfirmDiscard()) return;
+  const prog = document.getElementById('feedUploadProgress');
+  let top = feedPosts.length ? Math.min(...feedPosts.map(p => p.sort_order)) : 0;
+  let lastId = null;
+  for (let i = 0; i < files.length; i++){
+    const f = files[i];
+    prog.textContent = `Uploading ${i + 1}/${files.length}…`;
+    try{
+      let blob, type = 'post', videoUrl = null;
+      if (f.type.startsWith('video/')){
+        videoUrl = URL.createObjectURL(f);
+        const v = await loadVideo(videoUrl);
+        await seekVideo(v, Math.min(1, (v.duration || 1) / 2));
+        blob = await frameToBlob(v);
+        type = 'reel';
+      } else {
+        blob = await compressImage(f, 1440);
+      }
+      const cover_url = await uploadFeedCover(blob);
+      top -= 1;
+      const { data, error } = await sb.from('feed_posts').insert([{ cover_url, media_type: type, sort_order: top, status: 'planned' }]).select();
+      if (error) throw new Error(error.message);
+      feedPosts.unshift(data[0]);
+      if (videoUrl) feedVideos.set(data[0].id, videoUrl);
+      lastId = data[0].id;
+    } catch(err){
+      alert(`Gagal upload "${f.name}": ${err.message}`);
+    }
+  }
+  prog.textContent = '';
+  if (lastId){ feedSelectedId = lastId; setFeedDirty(false); }
+  renderFeedPreview();
+  renderFeedEditor();
+});
+
+/* ----- right: editor ----- */
+function selectFeedPost(id){
+  if (id === feedSelectedId) return;
+  if (!feedConfirmDiscard()) return;
+  feedSelectedId = id;
+  renderFeedPreview();
+  renderFeedEditor();
+}
+
+function renderFeedEditor(){
+  const ed = document.getElementById('feedEditor');
+  feedPendingCover = null;
+  const p = feedPosts.find(x => x.id === feedSelectedId);
+  if (!p){ ed.innerHTML = '<div class="cat-empty">Upload foto atau video untuk mulai menyusun feed.</div>'; setFeedDirty(false); return; }
+  const idx = feedPosts.indexOf(p);
+  const videoUrl = feedVideos.get(p.id);
+
+  ed.innerHTML = `
+    <div class="cat-ed-head">
+      <div><span class="ttl">Post ${idx + 1}</span><span class="meta">of ${feedPosts.length}</span></div>
+      <span class="dirty-flag" id="feedDirtyFlag">● Unsaved changes</span>
+    </div>
+    <div class="feed-ed-body">
+      <div class="feed-cover-row">
+        <div class="feed-cover"><img id="feedCoverImg" src="${esc(p.cover_url)}" alt=""></div>
+        <div class="feed-cover-ctrl">
+          ${videoUrl ? `
+            <video class="feed-video" id="feedVideo" src="${videoUrl}" muted playsinline preload="auto"></video>
+            <div class="feed-frame-row">
+              <input type="range" id="feedFrame" min="0" max="1" step="0.04" value="0">
+              <span id="feedFrameTime">0.0s</span>
+            </div>
+            <button type="button" class="btn-ghost" id="feedUseFrame">Use this frame as cover</button>` : `
+            <div class="feed-hint">${p.media_type === 'reel' ? 'Video is not stored. To pick a different frame, choose the video again:' : 'Choose a video to pick a cover frame from it:'}</div>
+            <input type="file" accept="video/*" id="feedVideoInput">`}
+          <div class="feed-hint">Or upload a custom cover image:</div>
+          <input type="file" accept="image/*" id="feedCoverInput">
+          <div class="feed-hint">The grid shows the center 3:4 of the cover.</div>
+        </div>
+      </div>
+
+      <div class="feed-row2">
+        <div><span class="field-label">Type</span>
+          <select id="feedType">
+            <option value="post" ${p.media_type === 'post' ? 'selected' : ''}>Single post</option>
+            <option value="carousel" ${p.media_type === 'carousel' ? 'selected' : ''}>Carousel</option>
+            <option value="reel" ${p.media_type === 'reel' ? 'selected' : ''}>Reel</option>
+          </select></div>
+        <div><span class="field-label">Planned date</span><input type="date" id="feedDate" value="${esc(p.planned_at || '')}"></div>
+        <div><span class="field-label">Status</span>
+          <select id="feedStatus">
+            <option value="planned" ${p.status !== 'posted' ? 'selected' : ''}>Planned</option>
+            <option value="posted" ${p.status === 'posted' ? 'selected' : ''}>Already posted</option>
+          </select></div>
+      </div>
+
+      <div>
+        <span class="field-label">Caption</span>
+        <textarea id="feedCaption" placeholder="Write the caption… (first ~125 characters show before “more”)">${esc(p.caption || '')}</textarea>
+        <div class="feed-capcount" id="feedCapCount"></div>
+      </div>
+
+      <div class="feed-move">
+        <button type="button" class="btn-ghost" id="feedMoveUp" ${idx === 0 ? 'disabled' : ''}>↑ Move earlier</button>
+        <button type="button" class="btn-ghost" id="feedMoveDown" ${idx === feedPosts.length - 1 ? 'disabled' : ''}>↓ Move later</button>
+      </div>
+    </div>
+    <div class="cat-ed-foot">
+      <button type="button" class="link-danger" id="feedDeleteBtn">Delete post</button>
+      <div class="right">
+        <span class="status" id="feedStatusMsg"></span>
+        <button type="button" class="btn-ghost" id="feedDiscardBtn" disabled>Discard</button>
+        <button type="button" class="btn-primary" id="feedSaveBtn">Save post</button>
+      </div>
+    </div>`;
+  setFeedDirty(false);
+
+  const cap = document.getElementById('feedCaption');
+  const count = document.getElementById('feedCapCount');
+  const syncCount = () => {
+    const tags = (cap.value.match(/#[^\s#]+/g) || []).length;
+    count.textContent = `${cap.value.length} / ${IG_CAPTION_LIMIT} · ${tags} / 30 hashtags`;
+    count.classList.toggle('over', cap.value.length > IG_CAPTION_LIMIT || tags > 30);
+  };
+  syncCount();
+  cap.addEventListener('input', () => { syncCount(); if (feedView === 'post') renderFeedPreview(); });
+  document.getElementById('feedDate').addEventListener('change', () => { if (feedView === 'post') renderFeedPreview(); });
+
+  const coverImg = document.getElementById('feedCoverImg');
+  document.getElementById('feedCoverInput').addEventListener('change', e => {
+    const f = e.target.files[0]; if (!f) return;
+    feedPendingCover = f;
+    coverImg.src = URL.createObjectURL(f);
+    setFeedDirty(true);
+    if (feedView === 'post') renderFeedPreview();
+  });
+
+  const vidInput = document.getElementById('feedVideoInput');
+  if (vidInput) vidInput.addEventListener('change', e => {
+    const f = e.target.files[0]; if (!f) return;
+    const prev = feedVideos.get(p.id); if (prev) URL.revokeObjectURL(prev);
+    feedVideos.set(p.id, URL.createObjectURL(f));
+    const keepDirty = feedDirty, keep = { cap: cap.value, date: document.getElementById('feedDate').value, type: document.getElementById('feedType').value, status: document.getElementById('feedStatus').value };
+    renderFeedEditor();
+    document.getElementById('feedCaption').value = keep.cap;
+    document.getElementById('feedDate').value = keep.date;
+    document.getElementById('feedStatus').value = keep.status;
+    document.getElementById('feedType').value = keep.type === 'post' ? 'reel' : keep.type;
+    setFeedDirty(keepDirty || keep.type === 'post');
+  });
+
+  const video = document.getElementById('feedVideo');
+  if (video){
+    const slider = document.getElementById('feedFrame');
+    const tLabel = document.getElementById('feedFrameTime');
+    video.addEventListener('loadedmetadata', () => { slider.max = (video.duration || 1).toFixed(2); });
+    slider.addEventListener('input', () => { video.currentTime = parseFloat(slider.value); tLabel.textContent = parseFloat(slider.value).toFixed(1) + 's'; });
+    document.getElementById('feedUseFrame').addEventListener('click', async () => {
+      if (!video.videoWidth) return;
+      feedPendingCover = await frameToBlob(video);
+      coverImg.src = URL.createObjectURL(feedPendingCover);
+      setFeedDirty(true);
+      if (feedView === 'post') renderFeedPreview();
+    });
+  }
+
+  document.getElementById('feedMoveUp').addEventListener('click', () => moveFeedPost(p.id, idx - 1).then(renderFeedEditorKeepingEdits));
+  document.getElementById('feedMoveDown').addEventListener('click', () => moveFeedPost(p.id, idx + 1).then(renderFeedEditorKeepingEdits));
+  document.getElementById('feedSaveBtn').addEventListener('click', () => saveFeedPost(p.id));
+  document.getElementById('feedDiscardBtn').addEventListener('click', () => { if (confirm('Buang perubahan pada post ini?')){ renderFeedEditor(); renderFeedPreview(); } });
+  document.getElementById('feedDeleteBtn').addEventListener('click', () => deleteFeedPost(p.id));
+}
+
+/* re-render after a reorder without losing unsaved typing */
+function renderFeedEditorKeepingEdits(){
+  if (!feedDirty){ renderFeedEditor(); return; }
+  const keep = {
+    cap: document.getElementById('feedCaption').value, date: document.getElementById('feedDate').value,
+    type: document.getElementById('feedType').value, status: document.getElementById('feedStatus').value,
+    cover: feedPendingCover, coverSrc: document.getElementById('feedCoverImg').getAttribute('src')
+  };
+  renderFeedEditor();
+  document.getElementById('feedCaption').value = keep.cap;
+  document.getElementById('feedCaption').dispatchEvent(new Event('input'));
+  document.getElementById('feedDate').value = keep.date;
+  document.getElementById('feedType').value = keep.type;
+  document.getElementById('feedStatus').value = keep.status;
+  feedPendingCover = keep.cover;
+  document.getElementById('feedCoverImg').src = keep.coverSrc;
+  setFeedDirty(true);
+}
+
+// any field edit marks the post dirty (attached once; the editor's contents are re-rendered)
+document.getElementById('feedEditor').addEventListener('input', e => { if (e.target.id !== 'feedFrame') setFeedDirty(true); });
+document.getElementById('feedEditor').addEventListener('change', e => { if (e.target.id !== 'feedFrame' && e.target.id !== 'feedVideoInput') setFeedDirty(true); });
+
+async function saveFeedPost(id){
+  const p = feedPosts.find(x => x.id === id); if (!p) return;
+  const status = document.getElementById('feedStatusMsg');
+  const btn = document.getElementById('feedSaveBtn');
+  btn.disabled = true; status.className = 'status'; status.textContent = 'Saving…';
+  const updates = {
+    caption: document.getElementById('feedCaption').value,
+    media_type: document.getElementById('feedType').value,
+    planned_at: document.getElementById('feedDate').value || null,
+    status: document.getElementById('feedStatus').value
+  };
+  const oldPath = feedPendingCover ? feedStoragePath(p.cover_url) : null;
+  try{
+    if (feedPendingCover){
+      const blob = feedPendingCover instanceof File ? await compressImage(feedPendingCover, 1440) : feedPendingCover;
+      updates.cover_url = await uploadFeedCover(blob);
+    }
+  } catch(err){
+    btn.disabled = false; status.className = 'status err'; status.textContent = 'Upload gagal: ' + err.message; return;
+  }
+  const { data, error } = await sb.from('feed_posts').update(updates).eq('id', id).select();
+  btn.disabled = false;
+  if (error){ status.className = 'status err'; status.textContent = 'Gagal: ' + error.message; return; }
+  if (oldPath) sb.storage.from('catalog-photos').remove([oldPath]);   // best effort; old cover no longer used
+  Object.assign(p, data && data[0] ? data[0] : updates);
+  renderFeedEditor();
+  renderFeedPreview();
+  const st = document.getElementById('feedStatusMsg');
+  st.className = 'status ok'; st.textContent = 'Tersimpan ✓';
+  setTimeout(() => { if (st.isConnected){ st.textContent = ''; st.className = 'status'; } }, 2500);
+}
+
+async function deleteFeedPost(id){
+  if (!confirm('Hapus post ini dari feed planner?')) return;
+  const p = feedPosts.find(x => x.id === id);
+  const { error } = await sb.from('feed_posts').delete().eq('id', id);
+  if (error){ alert('Gagal hapus: ' + error.message); return; }
+  const path = p && feedStoragePath(p.cover_url);
+  if (path) sb.storage.from('catalog-photos').remove([path]);
+  const v = feedVideos.get(id); if (v){ URL.revokeObjectURL(v); feedVideos.delete(id); }
+  const idx = feedPosts.findIndex(x => x.id === id);
+  feedPosts.splice(idx, 1);
+  feedSelectedId = feedPosts.length ? feedPosts[Math.min(idx, feedPosts.length - 1)].id : null;
+  setFeedDirty(false);
+  renderFeedPreview();
+  renderFeedEditor();
+}
+window.addEventListener('beforeunload', e => { if (feedDirty){ e.preventDefault(); e.returnValue = ''; } });
 
 /* ---------- QUIZ EDITOR ---------- */
 let archetypeNames = [];
